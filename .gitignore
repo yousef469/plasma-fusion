@@ -1,1 +1,33 @@
+# Ignore everything by default
 *
+
+# Explicitly un-ignore files we want to track
+!.gitignore
+!LICENSE
+!README.md
+
+# Core physics engine
+!physics_engine.py
+!transport_solver.py
+!mhd_stability.py
+!divertor_sol.py
+!tbr_model.py
+!heating_system.py
+!ntm_stabilization.py
+
+# Optimization and scoring
+!design_optimizer.py
+!design_scorer.py
+!B_HIGH_FIDELITY.py
+
+# AI controller
+!rl_env.py
+!simulator.py
+
+# Paper
+!main.tex
+!main.pdf
+!fusion-paper.zip
+
+# Old design PDF
+!Design_of_a_Self_Sustaining_Tokamak_Fusion_Power_Plant_From_Physics_Basis_to_Engineering_Integration (1).pdf
