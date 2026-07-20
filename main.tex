@@ -28,7 +28,7 @@
 \maketitle
 
 \begin{abstract}
-We present a complete conceptual design of a tokamak fusion power plant that achieves high-gain driven burn with a magnetic gain $Q = 23.3$ under ITER H98(y,2) confinement scaling. As a physics-based sensitivity cross-check, a gyro-Bohm transport model calibrated to JET D-T data ($C_{\rm GB} = 1.14$, 12.5\% error) yields $Q = 7.3$ with 751~MW of external heating, still above ITER's $Q = 10$ target. The design integrates one-dimensional radial profile corrections, eliminating the need for ad-hoc profile peaking factors, with a computed peaking factor of 1.46 obtained from parabolic profile integrals with ITER-relevant shape parameters ($\alpha_n = 0.2$, $\alpha_T = 0.8$). The physics model includes a self-consistent power balance, bootstrap current scaling, impurity radiation, helium ash equilibrium, profile-consistent MHD stability with shape-dependent no-wall ($\beta_N < 4.07$) and wall-stabilized ($\beta_N < 5.05$) limits, scrape-off-layer divertor modeling with Eich-unbounded heat flux width ($\lambda_q = 0.29$~mm, broadened to 0.95~mm in detachment), tritium breeding neutronics, quench protection, and an artificial-intelligence-based plasma controller. Key output parameters include a major radius of 12.08~m, toroidal field of 11.7~T, fusion power of 5,475~MW thermal (1,762~MW electric net), and an estimated capital cost of \$12.73~billion (\$7,224/kW), competitive with nuclear fission. The confinement model is validated against experimental JET D-T data with error below 7\%. All engineering analyses employ only presently qualified materials (Nb$_3$Sn, SS316LN, tungsten monoblocks, CuCrZr, LiPb) and standard manufacturing processes. The results demonstrate that a commercially viable fusion power plant is achievable with today's technology base, requiring no fundamental scientific breakthroughs --- only engineering integration.
+We present a complete conceptual design of a tokamak fusion power plant that achieves high-gain driven burn with a magnetic gain $Q = 23.3$ under ITER H98(y,2) confinement scaling. As a physics-based sensitivity cross-check, a gyro-Bohm transport model calibrated to JET D-T data ($C_{\rm GB} = 1.14$, 12.5\% error) yields $Q = 7.3$ with 751~MW of external heating, still above ITER's $Q = 10$ target. The design integrates one-dimensional radial profile corrections, eliminating the need for ad-hoc profile peaking factors, with a computed peaking factor of 1.46 obtained from parabolic profile integrals with ITER-relevant shape parameters ($\alpha_n = 0.2$, $\alpha_T = 0.8$). The physics model includes a self-consistent power balance, bootstrap current scaling, impurity radiation, helium ash equilibrium, profile-consistent MHD stability with shape-dependent no-wall ($\beta_N < 4.07$) and wall-stabilized ($\beta_N < 5.05$) limits, scrape-off-layer divertor modeling with Eich-unbounded heat flux width ($\lambda_q = 0.29$~mm, broadened to 0.95~mm in detachment), tritium breeding neutronics, quench protection, and an artificial-intelligence-based plasma controller. Key output parameters include a major radius of 12.08~m, toroidal field of 11.7~T, fusion power of 5,475~MW thermal (1,762~MW electric net), and an estimated capital cost of \$13.0~billion (\$7,375/kW), competitive with nuclear fission. The confinement model is validated against experimental JET D-T data with error below 7\%. All engineering analyses employ only presently qualified materials (Nb$_3$Sn, SS316LN, tungsten monoblocks, CuCrZr, LiPb) and standard manufacturing processes. The results demonstrate that a commercially viable fusion power plant is achievable with today's technology base, requiring no fundamental scientific breakthroughs --- only engineering integration.
 \end{abstract}
 
 \section{Introduction}
@@ -295,9 +295,15 @@ The gyro-Bohm transport sensitivity analysis (Section~\ref{sec:gyrobohm}) requir
 
 The gyro-Bohm operating point is therefore not practically accessible as a continuous mode. This does not affect the primary design (which operates under H98 scaling with zero auxiliary heating), but establishes a physical bound on degraded confinement scenarios. A more realistic interpretation is that the true confinement lies between H98 and gyro-Bohm, requiring 50--100~MW of installed auxiliary heating for startup, profile control, and degraded confinement margin --- consistent with ITER's 50~MW heating system.
 
+\subsection{TF Coil Stress Analysis}
+
+The TF coils operate at a peak field of 15.2~T at the inner leg winding pack (inboard blanket depth 0.8~m, shield 0.5~m, vacuum vessel 0.3~m, total inboard build 1.8~m). Each of the 16 coils carries 44~MA-turns, with a winding pack cross-section of 3.2~m$^2$ (1.8~m $\times$ 1.8~m) at an overall current density of 14~A/mm$^2$. The SS316LN coil case (0.33~m thick) experiences a hoop stress of 493~MPa, yielding a safety factor of 2.0 against the 1,000~MPa yield strength at 4~K. The Nb$_3$Sn conductor critical current margin at 4.5~K and 15.2~T is 69$\times$, with a temperature margin of 6.8~K.
+
+The TF coil stored energy is 65.4~GJ (16 coils). Inter-coil supporting structures and wedging provide additional structural margin for out-of-plane loads.
+
 \subsection{Quench Protection}
 
-The magnet system stores 65.4~GJ of magnetic energy (18 coils $\times$ 3.63~GJ each at 35~kA). Quench detection uses balance-bridge voltage measurement with 50~ms detection time and 100~mV threshold. Each coil is subdivided into six independently protected sections, each with a 0.3~$\Omega$ dump resistor. This subdivision limits the adiabatic hotspot temperature to below 150~K. Protection switches employ N+1 redundant IGBT stacks (25~kV, 40~kA rating).
+The magnet system stores 65.4~GJ of magnetic energy (16 coils). Quench detection uses balance-bridge voltage measurement with 50~ms detection time and 100~mV threshold. Each coil is subdivided into six independently protected sections, each with a 0.3~$\Omega$ dump resistor. This subdivision limits the adiabatic hotspot temperature to below 150~K. Protection switches employ N+1 redundant IGBT stacks (25~kV, 40~kA rating).
 
 \subsection{Vacuum Vessel and Maintenance}
 
@@ -400,11 +406,14 @@ ECCD cost & \$75 & M \\
 TF ripple (16 coils) & 6.0 & \% \\
 Alpha ripple loss & 1.1 & \% \\
 Alpha ripple loss (mit.) & 0.3 & \% \\
-Burn time & 7.1 & hours \\
+Burn time & 1.5 & hours \\
 TF stored energy & 65.4 & GJ \\
 TF coil mass & 18,000 & tonnes \\
-Total cost & \$12.73 & B \\
-Cost per kWe & \$7,224 & \$/kW \\
+TF peak field & 15.2 & T \\
+CS flux available & 1,049 & Wb \\
+CS ramp-up required & 509 & Wb \\
+Total cost & \$13.0 & B \\
+Cost per kWe & \$7,375 & \$/kW \\
 LCOE & \$104 & \$/MWh \\
 Plasma volume & 596 & m$^3$ \\
 \bottomrule
@@ -495,7 +504,7 @@ The present design incorporates several physics refinements that were omitted fr
 
 \textbf{Normalized beta and MHD stability.} The Troyon limit ($\beta_N < 3.5$) is replaced by a profile-consistent MHD model that gives $\beta_{N,\text{no-wall}} = 4.07$ and $\beta_{N,\text{wall}} = 5.05$ for the specific plasma shape ($\kappa = 2.71$, $\delta = 0.30$, $l_i = 1.04$). The design's $\beta_N = 3.08$ has 24\% margin to the no-wall limit and 64\% margin to the wall-stabilized limit. The NTM stability metric of 1.13 indicates marginal stability above the onset threshold; active ECCD stabilization is required, consistent with the planning for ITER and SPARC. The disruption probability of 0.56, while higher than the previous Troyon-based estimate of 0.095, is consistent with the empirical disruptivity database for reactors operating near stability boundaries \cite{sweeney2020}.
 
-\textbf{Bootstrap current.} At this high aspect ratio ($R/a = 12.6$), the bootstrap fraction is 13.7\%, requiring inductive current drive for the remaining current. The central solenoid provides a burn pulse of 7.1 hours, suitable for baseload power operation with minimal dwell time between pulses.
+\textbf{Bootstrap current.} At this high aspect ratio ($R/a = 12.6$), the bootstrap fraction is 13.7\%, requiring inductive current drive for the remaining current. The central solenoid (Nb$_3$Sn, $R_{\text{out}} = 3.10$~m, 15~m tall, 13~T peak field) provides 1,049~Wb of flux swing against a ramp-up requirement of 509~Wb (margin 2.1$\times$), yielding a 1.5-hour burn pulse.
 
 \textbf{Tritium self-sufficiency.} The baseline LiPb blanket achieves TBR = 0.97. An HCPB blanket upgrade (800~mm Li$_4$SiO$_4$, 15\% $^6$Li, 20~mm Be) calibrated to published MCNP results yields TBR = 1.17, closing the fuel cycle.
 

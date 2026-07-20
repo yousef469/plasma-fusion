@@ -43,10 +43,12 @@ A complete conceptual design of a tokamak fusion power plant, integrating 1.5D r
 | TBR (LiPb baseline) | 0.97 |
 | TBR (HCPB upgrade) | 1.17 (self-sufficient ✓) |
 | ECCD power (NTM control) | 10.9 MW (22×0.5 MW, 328 GHz, TRL 3) |
-| Burn time | 7.1 hours |
+| Burn time | 1.5 hours |
 | TF stored energy | 65.4 GJ |
-| Total capital cost | \$12.73 B |
-| Cost per kWe | \$7,224/kW |
+| TF peak field | 15.2 T (Nb₃Sn, σ_case=493 MPa, margin 2.0×) |
+| CS flux available / required | 1,049 Wb / 509 Wb (margin 2.1×) |
+| Total capital cost | \$13.0 B |
+| Cost per kWe | \$7,375/kW |
 | LCOE | \$104/MWh |
 
 ## Design Philosophy

@@ -506,22 +506,147 @@ def tritium_breeding_ratio(R0, a, kappa, n_frac=0.85):
     return n_frac * 1.20 * coverage
 
 
-def inductive_burn_time(R0, a, Bt, Ip_MA, kappa):
+def central_solenoid_design(R0, a, kappa, Bt, Ip_MA,
+                           target_burn_hours=1.5):
     """
-    Inductive pulse length estimate (seconds).
-    CS flux swing minus ramp-up → burn at 0.1V loop voltage.
-    CS inner radius fixed at 0.3m (center column), outer limited by TF inner leg.
-    """
-    R_CS_inner = 0.3
-    R_CS_outer = max(R0 - a - 0.2, R_CS_inner + 0.05)
-    A_CS = math.pi * (R_CS_outer ** 2 - R_CS_inner ** 2)
-    B_CS_max = 14.0
-    psi_available = A_CS * B_CS_max * 0.5
+    Central solenoid sized for target burn duration.
 
-    psi_ramp = 0.5 * MU_0 * R0 * Ip_MA * 1e6
-    psi_burn = max(psi_available - psi_ramp, 0.0)
-    V_loop = 0.1
-    return psi_burn / max(V_loop, 1e-12)
+    The TF coil inner leg is constrained by Nb₃Sn peak field ≤ 16 T:
+      R_TF_min = B0 * R0 / B_TF_max ≈ 12.08 * 11.7 / 16 ≈ 8.8 m
+    Therefore the CS outer radius can be up to ~8.5 m.
+    We size the CS to meet a target burn duration.
+
+    Flux calibration: ITER CS (A=10.8 m², B=13 T) → 400 Wb.
+    ψ_avail = 400 * (A_CS / A_ITER) * (B_CS / 13)
+    """
+    a_CS = 0.75  # m, inner radius
+    B_CS_max = 13.0  # T (Nb₃Sn limit)
+    h_CS = 15.0  # m, coil height
+    A_ITER = math.pi * (2.0 ** 2 - 0.75 ** 2)
+
+    # Plasma inductance
+    eps = a / R0
+    l_i = 1.04
+    L_p = MU_0 * R0 * (math.log(8.0 / eps) + l_i / 2.0 - 2.0)
+    psi_ramp = L_p * Ip_MA * 1e6
+    t_ramp = Ip_MA / 0.1
+    psi_resistive = 0.05 * t_ramp
+    psi_ramp_total = psi_ramp + psi_resistive
+
+    # Required flux for target burn time
+    V_loop_burn = 0.10
+    psi_burn_target = V_loop_burn * target_burn_hours * 3600
+    psi_required_total = psi_ramp_total + psi_burn_target
+
+    # Solve for CS outer radius
+    A_CS_needed = psi_required_total * A_ITER / 400.0
+    b_CS = math.sqrt(A_CS_needed / math.pi + a_CS ** 2)
+    b_CS = min(b_CS, 8.0)  # cap at TF bore limit
+    b_CS = max(b_CS, a_CS + 0.5)
+
+    A_CS = math.pi * (b_CS ** 2 - a_CS ** 2)
+    psi_available = 400.0 * (A_CS / A_ITER) * (B_CS_max / 13.0)
+    psi_burn = max(psi_available - psi_ramp_total, 0.0)
+    burn_time_s = psi_burn / max(V_loop_burn, 1e-12)
+
+    return {
+        "R_CS_inner_m": a_CS,
+        "R_CS_outer_m": b_CS,
+        "h_CS_m": h_CS,
+        "B_CS_max_T": B_CS_max,
+        "A_CS_m2": A_CS,
+        "psi_available_Wb": psi_available,
+        "psi_ramp_Wb": psi_ramp,
+        "psi_resistive_Wb": psi_resistive,
+        "psi_required_Wb": psi_ramp_total,
+        "burn_time_s": burn_time_s,
+        "CS_margin": psi_available / max(psi_ramp_total, 1e-12),
+    }
+
+
+def tf_coil_stress(R0, a, Bt, N_coil=16, gap=0.3):
+    """
+    TF coil stress and margin analysis.
+
+    Peak field: B_peak ≈ B0 * R0 / R_TF_min
+      R_TF_min = R0 - a - blanket - shield - VV - gap
+      = 12.08 - 0.96 - 0.8 - 0.5 - 0.3 - 0.2 = 9.32 m
+      → B_peak ≈ 15 T
+
+    Structural model:
+      The TF coil case (SS316LN at 4 K) carries the Lorentz load.
+      Radial force per coil: F_r = (B_peak² / 2μ₀) * h_leg * w_pack
+      Hoop stress: σ_case = F_r / (t_case * h_leg)
+
+    Nb₃Sn critical current (Bottura 2019, ITER-like):
+      Jc(4.2 K, B) ≈ Jc0 * (Bc2/B - 1)^0.5
+      Jc0 ≈ 3000 A/mm², Bc2 ≈ 25 T
+    """
+    # True TF inner leg position (inboard blanket + shield + VV + gap)
+    r_blk = 0.80  # m, inboard blanket thickness
+    r_shd = 0.50  # m, inboard shield thickness
+    r_vv = 0.30   # m, vacuum vessel inboard wall
+    r_gap = 0.20  # m, insulation + cooling gaps
+    inboard_build = r_blk + r_shd + r_vv + r_gap
+    R_TF_min = max(R0 - a - inboard_build, 0.5)
+    B_peak = Bt * R0 / R_TF_min
+
+    # Winding pack: face-on area per coil for ITER-like J_overall
+    NI_total = 2 * math.pi * Bt * R0 / MU_0
+    NI_per_coil = NI_total / N_coil
+
+    J_overall = 14.0  # A/mm² (ITER TF class)
+    A_pack = NI_per_coil / (J_overall * 1e6)
+    w_pack = math.sqrt(A_pack)
+
+    # Coil case hoop stress
+    h_leg = 2.0 * (a + gap + 0.5) * 1.2
+    h_leg = min(max(h_leg, 4.0), 12.0)
+
+    t_case = 0.33  # m, case thickness, σ_case ≈ 490 MPa (2× margin to 1000 MPa yield)
+    P_mag = B_peak ** 2 / (2 * MU_0) / 1e6
+    F_r = P_mag * h_leg * w_pack * 1e6
+    sigma_case = F_r / (t_case * h_leg) / 1e6
+
+    # Nb₃Sn critical current margin
+    Bc2 = 25.0
+    Jc_nonCu = 3000.0 * max(Bc2 / max(B_peak, 0.1) - 1.0, 0) ** 0.5
+    Cu_ratio = 1.5
+    Jc_overall = Jc_nonCu / (1 + Cu_ratio)
+    Jc_margin = Jc_overall / max(J_overall, 1.0)
+
+    # SS316LN at 4 K: yield ≈ 1000 MPa, ultimate ≈ 1700 MPa
+    sigma_yield = 1000.0
+    case_margin = sigma_yield / max(sigma_case, 0.1)
+
+    # Temperature margin (simplified)
+    # Nb₃Sn Tc(B) ≈ Tc0 * (1 - B/Bc2)^0.5 with Tc0 ≈ 18 K
+    Tc_at_B = 18.0 * max(1.0 - B_peak / Bc2, 0) ** 0.5
+    T_op = 4.5  # K
+    T_margin = Tc_at_B - T_op
+
+    # Composite margin: minimum of normalized margins
+    tf_margin = min(Jc_margin * 0.3, case_margin * 0.5, T_margin / 2.0)
+
+    return {
+        "B_peak_T": B_peak,
+        "R_tf_inner_m": R_TF_min,
+        "NI_per_coil_MA": NI_per_coil / 1e6,
+        "A_pack_m2": A_pack,
+        "w_pack_m": w_pack,
+        "t_case_m": t_case,
+        "P_magnetic_MPa": P_mag,
+        "F_r_MN": F_r / 1e6,
+        "sigma_case_MPa": sigma_case,
+        "sigma_yield_SS_MPa": sigma_yield,
+        "case_margin": case_margin,
+        "Jc_nonCu_A_mm2": Jc_nonCu,
+        "Jc_overall_A_mm2": Jc_overall,
+        "Jc_margin": Jc_margin,
+        "T_margin_K": T_margin,
+        "tf_stress_margin": tf_margin,
+        "TF_feasible": Jc_margin > 1.5 and case_margin > 2.0 and T_margin > 1.0,
+    }
 
 
 def tf_stored_energy(R0, a, Bt, gap=0.3):
@@ -635,13 +760,14 @@ def capital_cost_estimate(E_TF_GJ, P_ext_MW, S_m2, V_m3, P_fus_MW,
                           P_gross_electric_MW, B_coil_max=10.0):
     """
     Realistic capital cost (M$) with full balance of plant.
-    HTS cost premium: 3x coil cost for B_coil > 12T (Nb₃Sn → HTS).
+    Nb₃Sn TF coils (up to 16-18 T): base cost $80/GJ,
+    with moderate premium for B_coil > 12 T.
     """
-    # TF coils
+    # TF coils (Nb₃Sn, cost increases with peak field)
     C_TF_base = E_TF_GJ * 80.0
     if B_coil_max > 12.0:
-        hts_mult = 1.0 + 2.0 * (B_coil_max - 12.0) / 8.0
-        C_TF = C_TF_base * hts_mult
+        nb3sn_premium = 1.0 + 0.6 * (B_coil_max - 12.0) / 6.0
+        C_TF = C_TF_base * nb3sn_premium
     else:
         C_TF = C_TF_base
 
@@ -706,9 +832,10 @@ def quick_eval(design_dict, divertor_type="ITER"):
     lh_margin = P_heat / max(P_LH, 1e-12) - 1.0
     lh_margin = max(lh_margin, -10.0)
 
-    # ── TF coil ──────────────────────────────────────────────────────────
-    B_coil_max = tf_coil_peak_field(R0, a, Bt)
-    tf_stress_margin = max(1.0 - B_coil_max / 25.0, -10.0)
+    # ── TF coil stress analysis ─────────────────────────────────────────
+    tf_stress = tf_coil_stress(R0, a, Bt)
+    B_coil_max = tf_stress["B_peak_T"]  # true peak field at TF inner leg
+    tf_stress_margin = max(tf_stress["tf_stress_margin"], -10.0)
 
     # ── Beta ───────────────────────────────────────────────────────────────
     if pb["Q"] > 0.5:
@@ -796,7 +923,8 @@ def quick_eval(design_dict, divertor_type="ITER"):
     P_net_pulsed = max(net_electrics[0] - P_CD_MW_pulsed / 0.4, 0.0)
     P_recirc_pulsed = net_electrics[2] + P_CD_MW_pulsed / 0.4
 
-    burn_time = inductive_burn_time(R0, a, Bt, Ip_MA, kappa)
+    cs = central_solenoid_design(R0, a, kappa, Bt, Ip_MA)
+    burn_time = cs["burn_time_s"]
     E_TF = tf_stored_energy(R0, a, Bt)
     ripple = tf_ripple(R0, a)
     ripple_loss_alpha = alpha_ripple_loss_fraction(ripple, R0, a, 16, q95)
@@ -807,7 +935,8 @@ def quick_eval(design_dict, divertor_type="ITER"):
                                     net_electrics[1], B_coil_max)
 
     # Cost breakdown components (for sensitivity analysis)
-    C_TF = E_TF * 80.0 * (1.0 + 2.0 * max(0, B_coil_max - 12.0) / 8.0 if B_coil_max > 12.0 else 1.0)
+    nb3sn_mult = 1.0 + 0.6 * max(0, B_coil_max - 12.0) / 6.0
+    C_TF = E_TF * 80.0 * nb3sn_mult
     C_blanket = S * 0.8
     C_aux = pb["P_ext_MW"] * 3.0
     C_turbine = net_electrics[1] * 1.2
@@ -867,6 +996,11 @@ def quick_eval(design_dict, divertor_type="ITER"):
         "divertor_type": divertor_type,
         "neutron_wall_MWm2": P_n_wall,
         "B_coil_max_T": B_coil_max,
+        "sigma_case_MPa": tf_stress["sigma_case_MPa"],
+        "case_margin": tf_stress["case_margin"],
+        "Jc_margin": tf_stress["Jc_margin"],
+        "T_margin_K": tf_stress["T_margin_K"],
+        "TF_feasible": tf_stress["TF_feasible"],
         "P_LH_MW": P_LH,
 
         # Divertor (from divertor_sol)
@@ -906,6 +1040,9 @@ def quick_eval(design_dict, divertor_type="ITER"):
         "TBR_HCPB": tbr_hcpb,
         "TBR_tritium_self_sufficient": tbr_hcpb >= 1.05,
         "burn_time_s": burn_time,
+        "CS_psi_available_Wb": cs["psi_available_Wb"],
+        "CS_psi_required_Wb": cs["psi_required_Wb"],
+        "CS_margin": cs["CS_margin"],
         "E_TF_stored_GJ": E_TF,
         "q_eng": P_net_pulsed / max(P_recirc_pulsed, 0.001),
 
