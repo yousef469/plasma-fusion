@@ -29,5 +29,13 @@
 !main.pdf
 !fusion-paper.zip
 
-# Old design PDF
-!Design_of_a_Self_Sustaining_Tokamak_Fusion_Power_Plant_From_Physics_Basis_to_Engineering_Integration (1).pdf
+# Figures
+!figures.py
+!figures/**
+!figures/*
+
+# Startup scenario
+!startup.py
+
+# Startup scenario
+!startup.py
