@@ -24,7 +24,7 @@ A complete conceptual design of a tokamak fusion power plant, integrating 1.5D r
 | Peak coil field | 13.1 T |
 | Plasma current Ip | 10.6 MA |
 | **Fusion power** | **5,475 MW** |
-| **Net electric** | **1,762 MW** |
+| **Net electric** | **1,929 MW** |
 | **Q (H98)** | **23.3** |
 | **Q (gyro-Bohm)** | **7.3** |
 | **Q (gyro-Bohm, Pext)** | 751 MW |
@@ -48,8 +48,12 @@ A complete conceptual design of a tokamak fusion power plant, integrating 1.5D r
 | TF peak field | 15.2 T (Nb₃Sn, σ_case=493 MPa, margin 2.0×) |
 | PF coils | 6 main + 2 divertor (NbTi, 14.0 MA-turns, 1,009 t) |
 | CS flux available / required | 1,049 Wb / 509 Wb (margin 2.1×) |
-| Total capital cost | \$13.9 B |
-| Cost per kWe | \$7,903/kW |
+| Thermal efficiency | 38.0% (reheat Rankine, He coolant 300→500°C) |
+| Recirculated power | 146 MWₑ (14.3 He + 30 cryo + 31 pumps + 40 ECCD + 31 other) |
+| Engineering Q | 13.3 |
+| Cooling water | 189,000 m³/h |
+| Total capital cost | \$14.4 B |
+| Cost per kWe | \$7,474/kW |
 | LCOE | \$104/MWh |
 
 ## Design Philosophy

@@ -28,7 +28,7 @@
 \maketitle
 
 \begin{abstract}
-We present a complete conceptual design of a tokamak fusion power plant that achieves high-gain driven burn with a magnetic gain $Q = 23.3$ under ITER H98(y,2) confinement scaling. As a physics-based sensitivity cross-check, a gyro-Bohm transport model calibrated to JET D-T data ($C_{\rm GB} = 1.14$, 12.5\% error) yields $Q = 7.3$ with 751~MW of external heating, still above ITER's $Q = 10$ target. The design integrates one-dimensional radial profile corrections, eliminating the need for ad-hoc profile peaking factors, with a computed peaking factor of 1.46 obtained from parabolic profile integrals with ITER-relevant shape parameters ($\alpha_n = 0.2$, $\alpha_T = 0.8$). The physics model includes a self-consistent power balance, bootstrap current scaling, impurity radiation, helium ash equilibrium, profile-consistent MHD stability with shape-dependent no-wall ($\beta_N < 4.07$) and wall-stabilized ($\beta_N < 5.05$) limits, scrape-off-layer divertor modeling with Eich-unbounded heat flux width ($\lambda_q = 0.29$~mm, broadened to 0.95~mm in detachment), tritium breeding neutronics, quench protection, and an artificial-intelligence-based plasma controller. Key output parameters include a major radius of 12.08~m, toroidal field of 11.7~T, fusion power of 5,475~MW thermal (1,762~MW electric net), and an estimated capital cost of \$13.9~billion (\$7,903/kW), competitive with nuclear fission. The confinement model is validated against experimental JET D-T data with error below 7\%. All engineering analyses employ only presently qualified materials (Nb$_3$Sn, SS316LN, tungsten monoblocks, CuCrZr, LiPb) and standard manufacturing processes. The results demonstrate that a commercially viable fusion power plant is achievable with today's technology base, requiring no fundamental scientific breakthroughs --- only engineering integration.
+We present a complete conceptual design of a tokamak fusion power plant that achieves high-gain driven burn with a magnetic gain $Q = 23.3$ under ITER H98(y,2) confinement scaling. As a physics-based sensitivity cross-check, a gyro-Bohm transport model calibrated to JET D-T data ($C_{\rm GB} = 1.14$, 12.5\% error) yields $Q = 7.3$ with 751~MW of external heating, still above ITER's $Q = 10$ target. The design integrates one-dimensional radial profile corrections, eliminating the need for ad-hoc profile peaking factors, with a computed peaking factor of 1.46 obtained from parabolic profile integrals with ITER-relevant shape parameters ($\alpha_n = 0.2$, $\alpha_T = 0.8$). The physics model includes a self-consistent power balance, bootstrap current scaling, impurity radiation, helium ash equilibrium, profile-consistent MHD stability with shape-dependent no-wall ($\beta_N < 4.07$) and wall-stabilized ($\beta_N < 5.05$) limits, scrape-off-layer divertor modeling with Eich-unbounded heat flux width ($\lambda_q = 0.29$~mm, broadened to 0.95~mm in detachment), tritium breeding neutronics, quench protection, a balanced plant design with reheat Rankine cycle, and an artificial-intelligence-based plasma controller. Key output parameters include a major radius of 12.08~m, toroidal field of 11.7~T, fusion power of 5,475~MW thermal (1,929~MW electric net), and an estimated capital cost of \$14.4~billion (\$7,474/kW), competitive with nuclear fission. The balance of plant design achieves 38\% thermal efficiency through a He-cooled HCPB blanket at 500~$^{\circ}$C coupled to a reheat Rankine steam cycle. The confinement model is validated against experimental JET D-T data with error below 7\%. All engineering analyses employ only presently qualified materials (Nb$_3$Sn, SS316LN, tungsten monoblocks, CuCrZr, LiPb) and standard manufacturing processes. The results demonstrate that a commercially viable fusion power plant is achievable with today's technology base, requiring no fundamental scientific breakthroughs --- only engineering integration.
 \end{abstract}
 
 \section{Introduction}
@@ -342,6 +342,25 @@ The total PF current-turns sum to 14.0~MA. With $\kappa = 2.71$, the plasma is v
 
 The vacuum vessel is an 80~mm double-wall SS316LN structure with a mass of 22,488~tonnes. Hoop stress is 30~MPa (safety factor 23), and the buckling safety factor is 885. Eight equatorial ports and sixteen upper/lower ports provide access for heating, diagnostics, and remote maintenance.
 
+\subsection{Balance of Plant}
+
+The thermal power of 5,475~MW is extracted by the helium-cooled HCPB blanket at 80~bar with an inlet temperature of 300~$^{\circ}$C and outlet temperature of 500~$^{\circ}$C. The primary helium coolant is circulated by four-stage axial compressors consuming 14.3~MW of electrical power.
+
+Heat is transferred through an intermediate helium-to-water heat exchanger to a reheat Rankine steam cycle. The steam generator produces superheated steam at 480~$^{\circ}$C and 160~bar, driving a high-pressure turbine followed by moisture separation, reheating, and a low-pressure turbine. With a cold-side condenser temperature of 40~$^{\circ}$C, the Carnot efficiency is 58.5\%, of which 65\% is achievable in a practical reheat Rankine cycle, yielding a net thermal efficiency of 38.0\%. The gross electrical output is 2,079~MW$_e$.
+
+Recirculated power totals 146~MW$_e$: He circulators (14.3~MW), cryoplant for superconducting magnets (30~MW), cooling water pumps (31.2~MW), vacuum pumping (5~MW), tritium processing (10~MW), balance-of-plant auxiliaries (15~MW), and ECCD for NTM stabilization (40.2~MW). Net electric output to the grid is 1,929~MW$_e$, giving an engineering gain $Q_{\text{eng}} = P_{\text{net}} / P_{\text{recirc}} = 13.3$.
+
+Waste heat of 3,442~MW$_t$ is rejected to a wet mechanical-draft cooling tower at a water flow rate of 189,000~m$^3$/h. Makeup water requirements are approximately 3,800~m$^3$/h (2\% evaporation and drift loss), consistent with a 2,000~MW$_e$ nuclear power plant.
+
+Figure~\ref{fig:power_flow} shows the complete power flow from fusion energy to net electric output.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_power_flow.png}
+\caption{Power flow diagram. Left: waterfall chart showing fusion power (5,475~MW), gross electric (2,079~MW at 38\% efficiency), recirculated power (146~MW), and net electric output (1,929~MW). Right: breakdown of recirculated power. The engineering gain is $Q_{\text{eng}} = 13.3$.}
+\label{fig:power_flow}
+\end{figure}
+
 \subsection{ELM and Disruption Mitigation}
 
 Edge-localized modes (ELMs) in a reactor of this scale would release up to 10--20~MJ per event, sufficient to erode tungsten monoblocks and potentially trigger a disruption. We propose an in-vessel resonant magnetic perturbation (RMP) coil system located at the low-field side midplane, similar to the ITER ELM coil design~\cite{pitts2009}. The RMP coils consist of 12 in-vessel saddle loops carrying up to 60~kA-turns each, powered by 6 independent power supplies (5~kV, 10~kA). These coils apply $n = 3$ and $n = 4$ perturbation spectra to suppress Type-I ELMs through the pitch-resonant stochastic layer mechanism.
@@ -407,7 +426,7 @@ Peak coil field & 13.1 & T \\
 Plasma current $I_p$ & 10.6 & MA \\
 Greenwald fraction & 0.60 & --- \\
 Fusion power $P_{\text{fus}}$ & 5,475 & MW \\
-Net electric power & 1,762 & MW$_e$ \\
+Net electric power & 1,929 & MW$_e$ \\
 Normalized beta $\beta_N$ & 3.08 & --- \\
 $\beta_{N,\text{no-wall}}$ limit & 4.07 & --- \\
 $\beta_{N,\text{wall}}$ limit & 5.05 & --- \\
@@ -450,10 +469,13 @@ PF conductor & NbTi & --- \\
 Vertical stability & Active (feedback) & --- \\
 CS flux available & 1,049 & Wb \\
 CS ramp-up required & 509 & Wb \\
-Total cost & \$13.9 & B \\
-Cost per kWe & \$7,903 & \$/kW \\
+Total cost & \$14.4 & B \\
+Cost per kWe & \$7,474 & \$/kW \\
 LCOE & \$104 & \$/MWh \\
 Plasma volume & 596 & m$^3$ \\
+Thermal efficiency & 38.0 & \% \\
+Blanket coolant $T_{\text{out}}$ & 500 & $^{\circ}$C \\
+Cooling water flow & 189,000 & m$^3$/h \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -506,7 +528,7 @@ $R_0$ (m) & 6.2 & 3.3 & 8.0--9.0 & 12.08 \\
 $B_0$ (T) & 5.3 & 12.2 & 5.5--6.0 & 11.7 \\
 $P_{\text{fus}}$ (MW) & 500 & 50--140 & 2,000 & 5,475 \\
 $P_{\text{net}}$ (MW$_e$) & 0 (test) & $\sim$0 & $\sim$500 & 1,762 \\
-Cost (\$/kW) & N/A & $\sim$\$200M/MW & $\sim$\$15k/kW & \$7,903 \\
+Cost (\$/kW) & N/A & $\sim$\$200M/MW & $\sim$\$15k/kW & \$7,474 \\
 Confinement model & H98 & TRANSP+TGLF & H98+ASTRA & H98 + GB \\
 MHD stability & Troyon & DCON & Troyon & Profile-consistent \\
 Divertor model & SOLPS & SOLPS & SOLPS & Eich+SO \\

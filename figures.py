@@ -288,16 +288,14 @@ def fig_cost_breakdown(save=True):
 
     costs = {
         "TF coils (Nb$_3$Sn)": C_TF,
-        "PF + CS coils": C_PF_CS,
+        "PF coils (NbTi)": C_PF,
         "Blanket (HCPB)": C_blanket,
-        "Vacuum vessel": 200,
-        "Cryostat + cryoplant": 600,
-        "Divertor (W)": 50,
-        "Heating + CD": C_aux,
         "Balance of plant": C_bop,
         "Cooling systems": C_cool,
         "Tritium plant": C_trit,
         "Site + assembly": C_site,
+        "I&C + controls": C_IC,
+        "Heating + CD": max(C_aux, 1),
         "Contingency + indirect": round(contingency),
     }
     total = sum(costs.values())
@@ -828,6 +826,104 @@ def fig_tokamak_layout(save=True):
     plt.close(fig)
 
 
+def fig_power_flow(save=True):
+    """
+    Power flow diagram showing fusion power → thermal → gross → net,
+    with recirculated power breakdown.
+    """
+    r = quick_eval(D, "SNOWFLAKE")
+    P_fus = r["P_fusion_MW"]
+    P_gross = r["P_gross_electric_MW"]
+    P_net = r["P_net_electric_MW"]
+    P_rej = r["P_rejected_MW"]
+    eta = r["eta_thermal"]
+    recirc = r["P_recirc_breakdown_MW"]
+
+    P_recirc_total = sum(recirc.values())
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5),
+                                    gridspec_kw={"width_ratios": [2, 1.2]})
+
+    # ── Left: Waterfall chart ────────────────────────────────────────────
+    categories = [
+        "Fusion\npower",
+        f"Gross\nelectric\n({eta*100:.0f}% η)",
+        "Recirculated\npower",
+        "Net electric\n(to grid)",
+    ]
+    values = [P_fus, P_gross, -P_recirc_total, P_net]
+    colors_bar = ["#e74c3c", "#3498db", "#e67e22", "#2ecc71"]
+
+    bars = ax1.bar(categories, values, color=colors_bar, edgecolor="white",
+                   width=0.5, zorder=3)
+
+    for bar, v in zip(bars, values):
+        y = bar.get_height()
+        va = "bottom" if y >= 0 else "top"
+        offset = 60 if y >= 0 else -60
+        ax1.text(bar.get_x() + bar.get_width() / 2, y + offset,
+                 f"{abs(v):.0f} MW" if abs(y) > 1 else "0 MW",
+                 ha="center", va=va, fontsize=10, fontweight="bold",
+                 color="#2c3e50")
+
+    # Connecting arrows
+    y_max = max(P_fus, P_gross) * 1.15
+    for i in range(len(values) - 1):
+        ax1.annotate("", xy=(i + 1, values[i] + (values[i + 1] if values[i + 1] < 0 else 0)),
+                     xytext=(i + 0.25, values[i]),
+                     arrowprops=dict(arrowstyle="->", color="#7f8c8d", lw=1.5, alpha=0.5))
+
+    ax1.set_ylabel("Power (MW)", fontsize=11)
+    ax1.set_title("Power Flow", fontsize=13, fontweight="bold")
+    ax1.axhline(0, color="black", lw=1)
+    ax1.grid(axis="y", alpha=0.2)
+    ax1.set_ylim(-P_recirc_total * 1.3, y_max)
+
+    # Efficiency annotation
+    ax1.text(0.95, 0.95,
+             f"$\\eta_{{\\text{{thermal}}}} = {eta*100:.1f}\\%$\n"
+             f"$\\eta_{{\\text{{net}}}} = {P_net/P_fus*100:.1f}\\%$",
+             transform=ax1.transAxes, fontsize=9, va="top", ha="right",
+             bbox=dict(fc="white", ec="gray", alpha=0.8, boxstyle="round"))
+
+    # ── Right: Recirc breakdown ──────────────────────────────────────────
+    recirc_labels = {
+        "He_circulators": "He circulators",
+        "cryoplant": "Cryoplant",
+        "cooling_pumps": "Cooling pumps",
+        "vacuum": "Vacuum pumps",
+        "tritium": "Tritium proc.",
+        "BOP_aux": "BOP auxiliaries",
+        "plasma_control": "Plasma control",
+        "ECCD": "ECCD (NTM)",
+    }
+    labels = [recirc_labels[k] for k in recirc]
+    vals = [recirc[k] for k in recirc]
+
+    colors_recirc = plt.cm.Set2(np.linspace(0, 1, len(vals)))
+    wedges, texts, autotexts = ax2.pie(
+        vals, labels=labels, autopct="%1.1f%%",
+        startangle=90, colors=colors_recirc,
+        pctdistance=0.75, wedgeprops={"edgecolor": "white", "lw": 1}
+    )
+    for t in autotexts:
+        t.set_fontsize(8)
+    ax2.set_title(f"Recirculated Power: {P_recirc_total:.0f} MW",
+                  fontsize=12, fontweight="bold")
+
+    fig.suptitle(
+        f"Net electric: {P_net:.0f} MW$_e$  |  "
+        f"Engineering Q = {P_net / max(P_recirc_total, 0.01):.1f}",
+        fontsize=13, y=1.02
+    )
+
+    plt.tight_layout()
+    if save:
+        fig.savefig("fig_power_flow.png")
+        print("  [+] fig_power_flow.png")
+    plt.close(fig)
+
+
 def generate_all():
     os.makedirs("figures", exist_ok=True)
     os.chdir("figures")
@@ -842,6 +938,7 @@ def generate_all():
     fig_sensitivity_tornado()
     fig_eccd_system()
     fig_tokamak_layout()
+    fig_power_flow()
     os.chdir("..")
     print("\nAll figures generated in figures/")
 

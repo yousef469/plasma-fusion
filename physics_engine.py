@@ -484,7 +484,7 @@ def check_stability_full(design_dict, n_bar_e20, T_keV, beta_N):
 # =============================================================================
 def net_electric_power(P_fus_MW, P_ext_MW, eta_thermal=0.33):
     """
-    Net electric power to grid (MW).
+    Net electric power to grid (MW) — simple model.
     Thermal efficiency ~33% for steam cycle.
     Recirculating: aux heating wall-plug (η=40%), cryoplant 25MW, other 15MW.
     """
@@ -492,6 +492,98 @@ def net_electric_power(P_fus_MW, P_ext_MW, eta_thermal=0.33):
     P_recirc = P_ext_MW / 0.4 + 25.0 + 15.0
     P_net = P_gross_electric - P_recirc
     return max(P_net, 0.0), P_gross_electric, P_recirc
+
+
+def balance_of_plant(P_fus_MW, P_ext_heating_MW=0.0, P_ECCD_recirc_MW=40.2,
+                     blanket_type="HCPB"):
+    """
+    Detailed balance of plant for fusion power plant.
+
+    Primary coolant: He at 80 bar, 300-500°C (HCPB blanket)
+    Secondary cycle: Reheat Rankine with η ≈ 0.37 (65% of Carnot)
+    Heat rejection: Wet cooling tower
+
+    Returns dict with all power flows and cooling requirements.
+    """
+    # Total thermal power from fusion (all energy → heat)
+    P_th = P_fus_MW
+
+    # Coolant temperatures (HCPB blanket, EUROFER compatible)
+    T_inlet = 300.0   # °C
+    T_outlet = 500.0  # °C
+
+    # Reheat Rankine cycle efficiency
+    T_cold = 40.0 + 273.15      # K, condenser at 40°C
+    T_hot = T_outlet - 20.0 + 273.15  # K, steam at ~480°C
+    eta_carnot = 1.0 - T_cold / T_hot
+    eta_thermal = eta_carnot * 0.65  # reheat Rankine: 65% of Carnot
+
+    # Gross electric
+    P_gross = P_th * eta_thermal
+
+    # ── Recirculated power breakdown ─────────────────────────────────────
+    # He coolant circulators: ΔP ≈ 0.15 bar at 80 bar, 400°C
+    cp_He = 5200.0         # J/kg·K
+    m_dot = P_th * 1e6 / (cp_He * (T_outlet - T_inlet))  # kg/s
+    rho_He = 6.5           # kg/m³ at 80 bar, 400°C
+    eta_pump = 0.85
+    delta_P = 0.15e5       # Pa (0.15 bar pressure drop)
+    P_He_circ = m_dot * delta_P / (rho_He * eta_pump) / 1e6
+
+    # Cryoplant (TF + CS + PF magnets)
+    P_cryo = 30.0
+
+    # Cooling water pumps (1.5% of gross)
+    P_cooling_pumps = P_gross * 0.015
+
+    # Vacuum pumping
+    P_vacuum = 5.0
+
+    # Tritium processing
+    P_tritium = 10.0
+
+    # BOP auxiliaries (lighting, HVAC, buildings)
+    P_BOP_aux = 15.0
+
+    # Plasma control (external heating during burn)
+    P_plasma_control = max(P_ext_heating_MW, 0.0)
+
+    # ECCD for NTM stabilization
+    P_ECCD = max(P_ECCD_recirc_MW, 0.0)
+
+    P_recirc = (P_He_circ + P_cryo + P_cooling_pumps + P_vacuum
+                + P_tritium + P_BOP_aux + P_plasma_control + P_ECCD)
+
+    P_net = P_gross - P_recirc
+
+    # Heat rejection to cooling tower
+    P_rejected = P_th - P_gross + P_BOP_aux + P_cooling_pumps
+
+    # Cooling water requirement (wet cooling: ~50 m³/h per MW rejected)
+    cooling_water_m3h = P_rejected * 55.0
+
+    return {
+        "P_thermal_MW": P_th,
+        "blanket_T_out_C": T_outlet,
+        "blanket_T_in_C": T_inlet,
+        "coolant": "He (80 bar, HCPB)",
+        "eta_carnot": eta_carnot,
+        "eta_thermal": eta_thermal,
+        "P_gross_electric_MW": P_gross,
+        "P_He_circulator_MW": round(P_He_circ, 1),
+        "P_cryoplant_MW": P_cryo,
+        "P_cooling_pumps_MW": round(P_cooling_pumps, 1),
+        "P_vacuum_pumps_MW": P_vacuum,
+        "P_tritium_processing_MW": P_tritium,
+        "P_BOP_aux_MW": P_BOP_aux,
+        "P_plasma_control_MW": P_plasma_control,
+        "P_ECCD_recirc_MW": round(P_ECCD, 1),
+        "P_recirc_total_MW": round(P_recirc, 1),
+        "P_net_electric_MW": max(P_net, 0.0),
+        "P_rejected_thermal_MW": round(P_rejected, 0),
+        "cooling_water_m3h": round(cooling_water_m3h, 0),
+        "q_eng": P_net / max(P_recirc, 0.001),
+    }
 
 
 def tritium_breeding_ratio(R0, a, kappa, n_frac=0.85):
@@ -1008,7 +1100,6 @@ def quick_eval(design_dict, divertor_type="ITER"):
     composite = max(composite, -10.0)
 
     # ── Engineering metrics ──────────────────────────────────────────────
-    net_electrics = net_electric_power(pb["P_fusion_MW"], pb["P_ext_MW"])
 
     # Steady-state current drive power (informational only — design is pulsed)
     gamma_CD = 0.30
@@ -1038,8 +1129,13 @@ def quick_eval(design_dict, divertor_type="ITER"):
     # ── Gyro-Bohm heating system sizing ──────────────────────────────────
     htg = size_heating_system(gb.get("P_ext_MW", 0), technology="EC")
 
+    # ── Balance of plant ─────────────────────────────────────────────────
+    bop = balance_of_plant(pb["P_fusion_MW"], pb["P_ext_MW"],
+                           P_ECCD_recirc_MW=eccd["recirc_P_ECCD_MW"])
+    net_electrics = (bop["P_net_electric_MW"], bop["P_gross_electric_MW"],
+                     bop["P_recirc_total_MW"])
+
     # ── Net electric with ECCD recirculating power ────────────────────────
-    # (P_ext is already the primary recirc component; ECCD adds ~11 MW extra)
     P_net_pulsed = max(net_electrics[0] - P_CD_MW_pulsed / 0.4, 0.0)
     P_recirc_pulsed = net_electrics[2] + P_CD_MW_pulsed / 0.4
 
@@ -1170,6 +1266,20 @@ def quick_eval(design_dict, divertor_type="ITER"):
         "CS_psi_required_Wb": cs["psi_required_Wb"],
         "CS_margin": cs["CS_margin"],
         "E_TF_stored_GJ": E_TF,
+        "P_recirc_breakdown_MW": {
+            "He_circulators": bop["P_He_circulator_MW"],
+            "cryoplant": bop["P_cryoplant_MW"],
+            "cooling_pumps": bop["P_cooling_pumps_MW"],
+            "vacuum": bop["P_vacuum_pumps_MW"],
+            "tritium": bop["P_tritium_processing_MW"],
+            "BOP_aux": bop["P_BOP_aux_MW"],
+            "plasma_control": bop["P_plasma_control_MW"],
+            "ECCD": bop["P_ECCD_recirc_MW"],
+        },
+        "eta_thermal": bop["eta_thermal"],
+        "blanket_T_out_C": bop["blanket_T_out_C"],
+        "cooling_water_m3h": bop["cooling_water_m3h"],
+        "P_rejected_MW": bop["P_rejected_thermal_MW"],
         "q_eng": P_net_pulsed / max(P_recirc_pulsed, 0.001),
 
         # NTM ECCD stabilization
