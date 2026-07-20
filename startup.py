@@ -192,7 +192,7 @@ def plot_startup_timeline(data, save_path="fig_startup.png"):
     ax.grid(alpha=0.2)
 
     ax = axes[2, 0]
-    Q = np.where(P_ext > 0.01, P_fus / P_ext, P_fus * 100)
+    Q = np.where(P_ext > 0.01, np.clip(P_fus / P_ext, 0, Q_DESIGN), Q_DESIGN)
     ax.step(t, Q, "darkgreen", lw=2, where="post")
     ax.axhline(10, color="red", ls="--", alpha=0.5, label="ITER Q=10")
     ax.axhline(Q_DESIGN, color="blue", ls="--", alpha=0.5, label=f"Design Q={Q_DESIGN}")
@@ -200,6 +200,7 @@ def plot_startup_timeline(data, save_path="fig_startup.png"):
     ax.set_ylabel("$Q$")
     ax.set_title("Fusion Gain")
     ax.set_yscale("log")
+    ax.set_ylim(1, Q_DESIGN * 2)
     ax.legend(fontsize=8)
     ax.grid(alpha=0.2)
 

@@ -287,15 +287,15 @@ def fig_cost_breakdown(save=True):
     contingency = base * 0.15
 
     costs = {
-        "TF coils (Nb$_3$Sn)": C_TF,
-        "PF coils (NbTi)": C_PF,
-        "Blanket (HCPB)": C_blanket,
-        "Balance of plant": C_bop,
-        "Cooling systems": C_cool,
-        "Tritium plant": C_trit,
-        "Site + assembly": C_site,
-        "I&C + controls": C_IC,
-        "Heating + CD": max(C_aux, 1),
+        "TF coils (Nb$_3$Sn)": round(C_TF),
+        "PF + CS coils (NbTi)": round(C_PF),
+        "Blanket (HCPB)": round(C_blanket),
+        "Balance of plant": round(C_bop),
+        "Cooling systems": round(C_cool),
+        "Tritium plant": round(C_trit),
+        "Site + assembly": round(C_site),
+        "I&C + controls": round(C_IC),
+        "Heating + CD": round(max(C_aux, 1)),
         "Contingency + indirect": round(contingency),
     }
     total = sum(costs.values())
@@ -555,7 +555,7 @@ def fig_eccd_system(save=True):
                    edgecolor="black", lw=0.5)
     for bar, v in zip(bars1, P_ec):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2,
-                f"{v} MW", ha="center", fontsize=8)
+                f"{v:.1f} MW", ha="center", fontsize=8)
     ax.set_xticks(x)
     ax.set_xticklabels(reactors)
     ax.set_ylabel("Power (MW)")

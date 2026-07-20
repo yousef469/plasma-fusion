@@ -974,6 +974,7 @@ def capital_cost_estimate(E_TF_GJ, P_ext_MW, S_m2, V_m3, P_fus_MW,
     with moderate premium for B_coil > 12 T.
 
     PF coil cost is passed in separately from pf_coil_system().
+    Includes central solenoid (~$500M) and 15% contingency.
     """
     # TF coils (Nb₃Sn, cost increases with peak field)
     C_TF_base = E_TF_GJ * 80.0
@@ -995,8 +996,12 @@ def capital_cost_estimate(E_TF_GJ, P_ext_MW, S_m2, V_m3, P_fus_MW,
     C_tritium = 1000.0                        # tritium plant (fixed ~$1B)
     C_site = 800.0                            # buildings, site prep
     C_IC = 300.0                              # I&C, controls
+    C_CS = 500.0                              # central solenoid
 
-    return C_TF + C_blanket + C_aux + C_turbine + C_cooling + C_tritium + C_site + C_IC + C_PF_MS
+    base = C_TF + C_blanket + C_aux + C_turbine + C_cooling + C_tritium + C_site + C_IC + C_PF_MS + C_CS
+    contingency = base * 0.15
+
+    return base + contingency
 
 
 # =============================================================================
