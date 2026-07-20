@@ -40,16 +40,17 @@ def generate_startup_timeline(P_ext_MW=50.0):
     P_LH = 0.049 * TARGET_n**0.72 * Bt**0.8 * S**0.94
 
     # Current ramp: central solenoid volt-second budget
-    # CS flux: Ψ_CS ≈ μ₀ * N_turns * I_CS * A_CS / R_CS (rough estimate)
-    # For 100-turn Nb3Sn CS: I_CS_max ≈ 45 kA, A_CS ≈ π*3² = 28 m²
-    # Total flux: Ψ ≈ 400 Wb (ITER-scale)
-    L_p = MU0 * R0 * (math.log(8 * R0 / a) - 2 + 0.25)  # plasma inductance (H)
-    psi_plasma = L_p * Ip_MA * 1e6  # flux to sustain current (Wb)
-    V_loop_avg = 0.05  # average loop voltage during ramp (V)
-    t_ramp = Ip_MA / 0.1  # ramp time (s) at 0.1 MA/s
-    psi_resistive = V_loop_avg * t_ramp  # resistive flux consumption (Wb)
-    psi_total = psi_plasma + psi_resistive  # total flux required (Wb)
-    psi_available = 400.0  # Wb (CS flux swing, ITER-scale Nb3Sn CS)
+    # CS design from physics_engine: R_out=3.10 m, R_in=0.75 m, h=15 m,
+    #   B_CS_max=13 T, A=28.3 m² → ψ_avail ≈ 1,050 Wb
+    from physics_engine import central_solenoid_design
+    cs = central_solenoid_design(R0, a, kappa, Bt, Ip_MA)
+    psi_available = cs["psi_available_Wb"]
+    L_p = MU0 * R0 * (math.log(8 * R0 / a) - 2 + 0.25)
+    psi_plasma = L_p * Ip_MA * 1e6
+    V_loop_avg = 0.05
+    t_ramp = Ip_MA / 0.1
+    psi_resistive = V_loop_avg * t_ramp
+    psi_total = psi_plasma + psi_resistive
 
     # L-H transition time: heat the plasma to P_heat > P_LH
     # With P_ext = 50 MW, need T such that P_alpha + P_ext > P_LH
