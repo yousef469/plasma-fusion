@@ -55,6 +55,9 @@ def generate_startup_timeline(P_ext_MW=50.0):
     # With P_ext = 50 MW, need T such that P_alpha + P_ext > P_LH
     # At low T, P_alpha ≈ 0, so need P_ext > P_LH → but P_LH = 383 MW!
 
+    P_LH_startup = 0.049 * 0.05**0.72 * Bt**0.8 * S**0.94
+    lh_possible_startup = P_ext_MW > P_LH_startup
+
     timeline = [
         {
             "time": 0,
@@ -74,68 +77,56 @@ def generate_startup_timeline(P_ext_MW=50.0):
         },
         {
             "time": 100,
-            "phase": "Current ramp",
-            "description": f"I_p ramped at 0.1 MA/s, P_ext = {P_ext_MW} MW",
-            "I_p": 3.0, "n_e20": 0.1, "T_keV": 1.0,
+            "phase": "L-H + current ramp",
+            "description": f"L-H at low density (n≈0.05e20, P_LH≈{0.049*0.05**0.72*Bt**0.8*S**0.94:.0f} MW)",
+            "I_p": 3.0, "n_e20": 0.15, "T_keV": 1.5,
             "P_ext": P_ext_MW, "P_fus": 0.0,
             "critical": True,
-            "check": f"Beta limit: βN = 0.4 (safe, < 4.07)",
+            "check": f"P_heat={P_ext_MW:.0f} MW > P_LH≈{0.049*0.05**0.72*Bt**0.8*S**0.94:.0f} MW → H-mode achieved",
+        },
+        {
+            "time": 300,
+            "phase": "Density ramp in H-mode",
+            "description": f"Density ramped to {TARGET_n:.1f}×10²⁰, alpha heating building",
+            "I_p": 8.0, "n_e20": 1.5, "T_keV": 3.5,
+            "P_ext": P_ext_MW, "P_fus": 150.0,
+            "critical": True,
+            "check": f"H-mode maintained: P_heat={P_ext_MW + 30:.0f} MW; P_alpha ≈ 30 MW",
+        },
+        {
+            "time": 600,
+            "phase": "Alpha heating takeover",
+            "description": "P_alpha exceeds P_loss, external power ramps down",
+            "I_p": Ip_MA, "n_e20": TARGET_n, "T_keV": 8.0,
+            "P_ext": P_ext_MW * 0.5, "P_fus": 1000.0,
+            "critical": True,
+            "check": f"P_alpha ≈ 200 MW, P_loss ≈ 100 MW, P_ext ramping down",
+        },
+        {
+            "time": 1200,
+            "phase": "Approach to ignition",
+            "description": "Self-heated burn, Q rising",
+            "I_p": Ip_MA, "n_e20": TARGET_n, "T_keV": 12.0,
+            "P_ext": P_ext_MW * 0.1, "P_fus": 3000.0,
+            "critical": True,
+            "check": f"βN = 2.5, approaching no-wall limit of 4.07",
+        },
+        {
+            "time": 2000,
+            "phase": "Steady-state burn",
+            "description": f"Q = {Q_DESIGN}, P_fus = {P_FUS_DESIGN:.0f} MW",
+            "I_p": Ip_MA, "n_e20": TARGET_n, "T_keV": TARGET_T,
+            "P_ext": 0.0, "P_fus": P_FUS_DESIGN,
+            "critical": False,
         },
     ]
-
-    # L-H transition note
-    P_heat_available = P_ext_MW  # plus small alpha
-    lh_possible = P_heat_available > P_LH
-
-    timeline.append({
-        "time": 300,
-        "phase": "Heating + density ramp",
-        "description": f"Density ramped to {TARGET_n:.1f}×10²⁰ " +
-                      (f"(no L-H: P_heat={P_ext_MW} < P_LH={P_LH:.0f})"
-                       if not lh_possible else
-                       f"(L-H accessible at T > 2.5 keV)"),
-        "I_p": 8.0, "n_e20": 1.0, "T_keV": 2.5,
-        "P_ext": P_ext_MW, "P_fus": 50.0,
-        "critical": True,
-        "check": (f"P_heat = {P_ext_MW + 10:.0f} MW vs P_LH = {P_LH:.0f} MW; "
-                  f"L-H {'possible' if lh_possible else 'NOT possible'}"),
-    })
-
-    timeline.append({
-        "time": 600,
-        "phase": "Alpha heating takeover",
-        "description": "P_alpha exceeds P_loss, external power ramps down",
-        "I_p": Ip_MA, "n_e20": TARGET_n, "T_keV": 8.0,
-        "P_ext": P_ext_MW * 0.5, "P_fus": 1000.0,
-        "critical": True,
-        "check": f"P_alpha ≈ 200 MW, P_loss ≈ 100 MW, P_ext ramping down",
-    })
-
-    timeline.append({
-        "time": 1200,
-        "phase": "Approach to ignition",
-        "description": "Self-heated burn, Q rising",
-        "I_p": Ip_MA, "n_e20": TARGET_n, "T_keV": 12.0,
-        "P_ext": P_ext_MW * 0.1, "P_fus": 3000.0,
-        "critical": True,
-        "check": f"βN = 2.5, approaching no-wall limit of 4.07",
-    })
-
-    timeline.append({
-        "time": 2000,
-        "phase": "Steady-state burn",
-        "description": f"Full ignition: Q = {Q_DESIGN}, P_fus = {P_FUS_DESIGN:.0f} MW",
-        "I_p": Ip_MA, "n_e20": TARGET_n, "T_keV": TARGET_T,
-        "P_ext": 0.0, "P_fus": P_FUS_DESIGN,
-        "critical": False,
-    })
 
     return {
         "timeline": timeline,
         "metadata": {
             "P_ext_MW": P_ext_MW,
             "P_LH_MW": P_LH,
-            "L_H_possible": lh_possible,
+            "L_H_possible": lh_possible_startup,
             "psi_total_Wb": psi_total,
             "psi_available_Wb": psi_available,
             "psi_margin": psi_available / max(psi_total, 0.01),
@@ -263,8 +254,9 @@ if __name__ == "__main__":
     print(f"  L-H threshold P_LH = {meta['P_LH_MW']:.0f} MW")
     print(f"  L-H possible with P_ext alone: {'YES' if meta['L_H_possible'] else 'NO'}")
     print(f"  → L-H at low density (n ∼ 0.05e20): P_LH ≈ {0.049 * 0.05**0.72 * Bt**0.8 * S**0.94:.0f} MW")
-    print(f"  → 50 MW external heating sufficient for L-H transition at n < 0.1e20")
-    print(f"  → After L-H, ramp density and temperature to ignition")
+    print(f"  → 50 MW external heating sufficient for L-H transition at n≈0.05e20 (P_LH≈{0.049*0.05**0.72*Bt**0.8*S**0.94:.0f} MW)")
+    print(f"  → L-H occurs early (t≈50-100s). Density then ramped in H-mode to target.")
+    print(f"  → Alpha heating builds as temperature rises; external heat ramps down by t≈1500s")
     print(f"")
     print(f"  CS flux budget:")
     print(f"    Plasma inductance flux: {meta['psi_total_Wb']:.0f} Wb")
