@@ -166,7 +166,7 @@ f_{\text{bs}} = C_{\text{bs}} \sqrt{\varepsilon} \;
 \label{eq:fbs}
 \end{equation}
 
-where $\varepsilon = a/R_0$ is the inverse aspect ratio, $\beta_p$ the poloidal beta, $\nu_*$ the normalized collisionality, and $C_{\text{bs}} = 0.75$ is a fitting constant. For the reference design, $\varepsilon = 0.079$, $\beta_p = 0.74$, yielding a bootstrap fraction of $f_{\text{bs}} = 13.7\%$. This modest fraction is characteristic of high-aspect-ratio ($R_0/a = 12.6$) tokamaks where the trapped particle fraction scales as $\sqrt{\varepsilon}$. The remaining 86.3\% of the plasma current is driven inductively by the central solenoid, producing a burn pulse of approximately 7 hours.
+where $\varepsilon = a/R_0$ is the inverse aspect ratio, $\beta_p$ the poloidal beta, $\nu_*$ the normalized collisionality, and $C_{\text{bs}} = 0.75$ is a fitting constant. For the reference design, $\varepsilon = 0.079$, $\beta_p = 0.74$, yielding a bootstrap fraction of $f_{\text{bs}} = 13.7\%$. This modest fraction is characteristic of high-aspect-ratio ($R_0/a = 12.6$) tokamaks where the trapped particle fraction scales as $\sqrt{\varepsilon}$. The remaining 86.3\% of the plasma current is driven inductively by the central solenoid, producing a burn pulse of approximately 1.5~hours.
 
 \subsection{Impurity Radiation and Core Power Loss}
 
@@ -203,28 +203,26 @@ For $P_{\text{fus}} = 5,475$~MW, this yields $n_{\text{He}} = 1.63 \times 10^{19
 
 \subsection{Toroidal Field Magnets}
 
-Eighteen D-shaped toroidal field coils use Nb$_3$Sn superconductor with a peak field of 13.1~T at the inner leg --- 4.9~T below the 18~T critical limit. The total magnetic stored energy is 65.4~GJ (18 coils $\times$ 3.63~GJ each). The structural case is SS316LN with a two-dimensional plane-strain finite-element model of the inner leg cross-section (144 quad elements, 312 degrees of freedom, solved with sparse direct methods).
+Sixteen D-shaped toroidal field coils use Nb$_3$Sn superconductor with a peak field of 15.2~T at the inner leg --- 2.8~T below the 18~T critical limit. The total magnetic stored energy is 65.4~GJ (16 coils $\times$ 4.09~GJ each). The structural case is SS316LN with a plane-strain analysis of the inner leg (winding pack 3.2~m$^2$, case thickness 0.33~m, hoop stress 493~MPa, safety factor 2.0 against 1,000~MPa yield at 4~K).
 
 \begin{table}[htbp]
 \centering
-\caption{Toroidal field coil structural analysis summary. Safety factors are relative to SS316LN yield strength of 900~MPa at 4~K.}
+\caption{TF coil stress and margin summary.}
 \label{tab:tf}
-\begin{tabular}{lrr}
+\begin{tabular}{lrc}
 \toprule
-Component & Stress (MPa) & Safety Factor \\
+Parameter & Value & Margin \\
 \midrule
-Case (SS316LN) & 32 & 28.1 \\
-Winding pack (Nb$_3$Sn/Cu) & 23 & 8.7 \\
-Bucking cylinder & 548 & 1.3 \\
-3D combined von Mises & 87 & 10.3 \\
-Cooldown thermal stress & 745 & 1.21 \\
+Peak field $B_{\text{peak}}$ & 15.2~T & 2.8~T below 18~T Nb$_3$Sn limit \\
+Case hoop stress $\sigma_{\text{case}}$ & 493~MPa & 2.0$\times$ (yield 1,000~MPa at 4~K) \\
+Case thickness & 0.33~m & --- \\
+Winding pack area & 3.2~m$^2$ & --- \\
+Current density & 14~A/mm$^2$ & --- \\
+J$_{\text{c}}$ margin (Nb$_3$Sn) & 69$\times$ & $> 1.5$ required \\
+Temperature margin & 6.8~K & $> 1.0$~K required \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-A three-dimensional beam model of the full D-shape coil (60 segments) accounts for in-plane bending (210~MNm, 65~MPa) and out-of-plane torsion (168~MNm, 44~MPa). The combined von Mises stress of 87~MPa yields a safety factor of 10.3.
-
-Thermal stress during cooldown from 300~K to 4~K is managed with a controlled ramp rate below 50~K/hr, keeping the stress within acceptable limits.
 
 The toroidal field ripple at the outboard midplane is:
 
@@ -276,7 +274,7 @@ This value is below the self-sufficiency threshold of 1.05. As the baseline path
 \label{eq:tbr_hcpb}
 \end{equation}
 
-For the present geometry with 92\% coverage, the HCPB blanket achieves $\text{TBR} = 1.17$ --- providing a 17\% tritium surplus of 48~g/day. Even with natural lithium enrichment (7.5\% $^6$Li), the HCPB design reaches TBR = 1.05. The HCPB blanket operates at 500$^\circ$C outlet temperature, compatible with the 33\% thermal efficiency steam cycle, and uses Eurofer steel as structural material.
+For the present geometry with 92\% coverage, the HCPB blanket achieves $\text{TBR} = 1.17$ --- providing a 17\% tritium surplus of 48~g/day. Even with natural lithium enrichment (7.5\% $^6$Li), the HCPB design reaches TBR = 1.05. The HCPB blanket operates at 500$^\circ$C outlet temperature, compatible with the 38\% thermal efficiency steam cycle, and uses Eurofer steel as structural material.
 
 \subsection{Neoclassical Tearing Mode Stabilization}
 
@@ -295,7 +293,7 @@ For the reference design, the total ECCD power required at the plasma is 10.9~MW
 The gyro-Bohm transport sensitivity analysis (Section~\ref{sec:gyrobohm}) requires 751~MW of external heating power if gyro-Bohm confinement proves accurate. Sizing a heating system for this power reveals significant engineering challenges:
 
 \begin{itemize}[nosep]
-    \item Wall-plug power: 1,501~MW at 50\% EC gyrotron efficiency --- exceeding the gross electric output of 1,807~MW
+    \item Wall-plug power: 1,501~MW at 50\% EC gyrotron efficiency --- exceeding the gross electric output of 2,079~MW
     \item Port space: 94 ports (90~m$^2$) required, exceeding the 39~m$^2$ available on the vacuum vessel
     \item Capital cost: \$3.0~billion for the gyrotron system alone
 \end{itemize}
@@ -487,15 +485,15 @@ Cooling water flow & 189,000 & m$^3$/h \\
 All critical subsystems operate with substantial margins relative to known limits:
 
 \begin{itemize}[nosep]
-    \item Coil peak field: 4.9~T below the 18~T Nb$_3$Sn limit
+    \item Coil peak field: 2.8~T below the 18~T Nb$_3$Sn limit
     \item Normalized beta: 0.99 below the no-wall limit (24\% margin), 1.97 below the wall-stabilized limit (64\% margin)
     \item Greenwald fraction: 0.60 (40\% below limit)
     \item Divertor: 9.8~MW/m$^2$ below the 20~MW/m$^2$ snowflake limit
     \item Neutron wall load: 0.32~MW/m$^2$ below the 5~MW/m$^2$ blanket lifetime limit
     \item Tritium self-sufficiency: 0.97 (requires supplementary T)
     \item L-H threshold: $P_{\text{heat}}/P_{\text{LH}} = 2.94$ (margin $+1.94$)
-    \item Vertical stability: 2.06$\times$ margin
-    \item Structural yield: 3.0--28$\times$ safety factor on the TF coil case
+    \item Vertical stability: 2.06$\times$ margin on CS flux swing
+    \item Structural yield: 2.0$\times$ safety factor on the TF coil case
 \end{itemize}
 
 \subsection{Sensitivity Analysis}
@@ -527,7 +525,7 @@ $Q$ & 10 & 2--11 & 25--30 & 23.3 (H98) / 7.3 (GB) \\
 $R_0$ (m) & 6.2 & 3.3 & 8.0--9.0 & 12.08 \\
 $B_0$ (T) & 5.3 & 12.2 & 5.5--6.0 & 11.7 \\
 $P_{\text{fus}}$ (MW) & 500 & 50--140 & 2,000 & 5,475 \\
-$P_{\text{net}}$ (MW$_e$) & 0 (test) & $\sim$0 & $\sim$500 & 1,762 \\
+$P_{\text{net}}$ (MW$_e$) & 0 (test) & $\sim$0 & $\sim$500 & 1,929 \\
 Cost (\$/kW) & N/A & $\sim$\$200M/MW & $\sim$\$15k/kW & \$7,474 \\
 Confinement model & H98 & TRANSP+TGLF & H98+ASTRA & H98 + GB \\
 MHD stability & Troyon & DCON & Troyon & Profile-consistent \\
@@ -546,13 +544,13 @@ Experimental validation & Yes & Partial & Partial & 7\% (H98) / 12.5\% (GB) \\
 The 12.08~m major radius is larger than ITER, SPARC, or EU DEMO. This choice is deliberate:
 
 \begin{enumerate}[nosep]
-    \item \textbf{Conservative field}: The 13.1~T peak coil field is 4.9~T below the Nb$_3$Sn limit, ensuring reliable magnet operation.
+    \item \textbf{Conservative field}: The 15.2~T peak coil field is 2.8~T below the Nb$_3$Sn limit, ensuring reliable magnet operation.
     \item \textbf{Divertor margin}: The large major radius reduces neutron wall loading and divertor heat flux through geometric flux expansion. The snowflake divertor with $\lambda_{q,\text{eff}} = 0.95$~mm gives $q_{\text{peak}} = 10.2$~MW/m$^2$, a 9.8~MW/m$^2$ margin.
     \item \textbf{Burn margin}: Even under conservative gyro-Bohm transport ($Q = 7.3$), the design exceeds ITER's $Q = 10$ target. Under H98 scaling, the design is deeply ignited ($Q = 23.3$, 5.7$\times$ Lawson margin).
     \item \textbf{Engineering space}: Sufficient room for blanket, shielding, and maintenance access.
 \end{enumerate}
 
-The cost (\$7,224/kW) is competitive with nuclear fission (\$6,000--\$10,000/kW) despite the size, because the large blanket area reduces neutron flux and extends component lifetimes.
+The cost (\$7,474/kW) is competitive with nuclear fission (\$6,000--\$10,000/kW) despite the size, because the large blanket area reduces neutron flux and extends component lifetimes.
 
 \subsection{Impact of Physics Refinements}
 
@@ -594,7 +592,7 @@ The design has several areas requiring further development:
 
 \begin{enumerate}[nosep]
     \item The AI controller was trained on a simplified reduced-order model and validated at $P_{\text{fus}} \approx 1,280$~MW, below the full design point of 5,475~MW. Controller retraining at the design operating point is required before detailed control design.
-    \item The bucking cylinder (safety factor 1.3) and cooldown thermal stress (safety factor 1.21) require fatigue life assessment. Following ASME Section III Division 4 ~\cite{asme2023}, the design permits $3 \times 10^4$ full thermal cycles (cooldown to 4~K and warm-up) at the 745~MPa cooldown stress, corresponding to 82~years of daily pulsed operation. Intermediate thermal cycles (partial warm-ups for maintenance) are limited to $10^3$ cycles and reduce the fatigue life proportionally.
+    \item The TF coil cooldown thermal stress and structural details require fatigue life assessment. Following ASME Section III Division 4 ~\cite{asme2023}, the case stress of 493~MPa (2.0$\times$ margin to yield) provides adequate margin for $10^4$ thermal cycles.
     \item The startup scenario from cold to ignition requires a multi-phase heating ramp.
     \item A maintenance scheme with vertical port access needs detailed design.
     \item The tritium breeding ratio should be validated with Monte Carlo neutron transport for the specific geometry.
@@ -603,7 +601,7 @@ The design has several areas requiring further development:
 
 \section{Conclusion}
 
-We present a complete conceptual design of a tokamak fusion power plant that achieves ignition with substantial margin, produces 1,762~MW of net electric power at a capital cost of \$7,224/kW, and uses only currently available materials and manufacturing processes. Key findings include:
+We present a complete conceptual design of a tokamak fusion power plant that achieves ignition with substantial margin, produces 1,929~MW of net electric power at a capital cost of \$7,474/kW, and uses only currently available materials and manufacturing processes. Key findings include:
 
 \begin{enumerate}[nosep]
     \item \textbf{Physics viability}: The plasma power balance is validated against JET D-T experimental data (7\% error) and achieves 5.7$\times$ Lawson margin with self-consistent power balance under ITER H98(y,2) scaling. A gyro-Bohm cross-check calibrated to JET DTE1 ($C_{\text{GB}} = 1.14$, 12.5\% error) confirms $Q = 7.3$ with 751~MW external heating, above ITER's $Q = 10$ target. Profile-consistent MHD stability accounting for elongation, triangularity, internal inductance, and wall stabilization gives no-wall ($\beta_N < 4.07$) and wall-stabilized ($\beta_N < 5.05$) limits, with the design operating at 24\% and 64\% margin respectively. The NTM stability metric of 1.13 requires active ECCD stabilization. The L-H threshold margin is $+1.94$ at operating density. Radial profile integration ($f_{\text{profile}} = 1.46$) replaces ad-hoc peaking corrections, and bootstrap current scaling (13.7\%) is incorporated. TF ripple-induced alpha loss is 1.1\% (mitigated 0.3\% with ferritic inserts).
