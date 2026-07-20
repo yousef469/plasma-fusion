@@ -95,9 +95,11 @@ def fig_radial_profiles(save=True):
 
 
 def fig_mhd_stability(save=True):
+    eng = quick_eval(D, divertor_type='SNOWFLAKE')
     r = full_stability_analysis(
         D["R0"], D["a"], D["elongation"], 0.3, D["B0"],
-        D["Ip"] / 1000, 1.04, D["q95"], 3.08, 2.20, 0.60
+        D["Ip"] / 1000, eng["l_i"], D["q95"],
+        eng["n_bar_e20"], eng["beta_N"], eng["T_ped"],
     )
     categories = [
         r"$\beta_N$ (design)",
@@ -106,17 +108,18 @@ def fig_mhd_stability(save=True):
         r"$\beta_N$ NTM threshold",
         r"$\beta_N$ with ECCD",
     ]
+    bn = eng["beta_N"]
     ntm_metric = r["ntm_stability_metric"]
-    beta_N_NTM = 3.08 / max(ntm_metric, 0.1)
-    beta_N_ECCD = 3.08 * 1.15  # ECCD raises threshold ~15%
-    values = [3.08, r["βN_no_wall_limit"], r["βN_wall_limit"], beta_N_NTM, beta_N_ECCD]
+    beta_N_NTM = bn / max(ntm_metric, 0.1)
+    beta_N_ECCD = bn * 1.15  # ECCD raises threshold ~15%
+    values = [bn, r["βN_no_wall_limit"], r["βN_wall_limit"], beta_N_NTM, beta_N_ECCD]
     colors = ["#2e86c1", "#27ae60", "#1abc9c", "#e74c3c", "#f39c12"]
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), gridspec_kw={"width_ratios": [1, 1.4]})
 
     ax = axes[0]
     bars = ax.barh(categories, values, color=colors, height=0.55, edgecolor="black", lw=0.5)
-    ax.axvline(3.08, color="black", ls="--", lw=1, alpha=0.5)
+    ax.axvline(bn, color="black", ls="--", lw=1, alpha=0.5)
     ax.set_xlim(0, max(values) * 1.15)
     ax.set_xlabel(r"$\beta_N$")
     for bar, v in zip(bars, values):
@@ -133,14 +136,15 @@ def fig_mhd_stability(save=True):
         "L-H threshold",
         "Density limit",
     ]
-    beta_N = 3.08
+    beta_N = bn
     beta_NW = r["βN_no_wall_limit"]
     beta_W = r["βN_wall_limit"]
     beta_NTM = beta_N / max(ntm_metric, 0.1)
     margin_NW = beta_NW - beta_N
     margin_W = beta_W - beta_N
     margin_NTM = beta_NTM - beta_N  # negative since above threshold
-    margins = [margin_W, margin_NW, margin_NTM, 0.0, 1.94, 0.40]
+    margins = [margin_W, margin_NW, margin_NTM, 0.0,
+               eng["lh_margin"], eng["density_margin"]]
     colors2 = ["#1abc9c", "#27ae60", "#e74c3c", "#2e86c1", "#9b59b6", "#e74c3c"]
 
     ax = axes[1]
