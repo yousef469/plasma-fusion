@@ -28,7 +28,7 @@
 \maketitle
 
 \begin{abstract}
-We present a complete conceptual design of a tokamak fusion power plant that achieves high-gain driven burn with a magnetic gain $Q = 23.3$ under ITER H98(y,2) confinement scaling. As a physics-based sensitivity cross-check, a gyro-Bohm transport model calibrated to JET D-T data ($C_{\rm GB} = 1.14$, 12.5\% error) yields $Q = 7.3$ with 751~MW of external heating, still above ITER's $Q = 10$ target. The design integrates one-dimensional radial profile corrections, eliminating the need for ad-hoc profile peaking factors, with a computed peaking factor of 1.46 obtained from parabolic profile integrals with ITER-relevant shape parameters ($\alpha_n = 0.2$, $\alpha_T = 0.8$). The physics model includes a self-consistent power balance, bootstrap current scaling, impurity radiation, helium ash equilibrium, profile-consistent MHD stability with shape-dependent no-wall ($\beta_N < 4.07$) and wall-stabilized ($\beta_N < 5.05$) limits, scrape-off-layer divertor modeling with Eich-unbounded heat flux width ($\lambda_q = 0.29$~mm, broadened to 0.95~mm in detachment), tritium breeding neutronics, quench protection, and an artificial-intelligence-based plasma controller. Key output parameters include a major radius of 12.08~m, toroidal field of 11.7~T, fusion power of 5,475~MW thermal (1,762~MW electric net), and an estimated capital cost of \$13.0~billion (\$7,375/kW), competitive with nuclear fission. The confinement model is validated against experimental JET D-T data with error below 7\%. All engineering analyses employ only presently qualified materials (Nb$_3$Sn, SS316LN, tungsten monoblocks, CuCrZr, LiPb) and standard manufacturing processes. The results demonstrate that a commercially viable fusion power plant is achievable with today's technology base, requiring no fundamental scientific breakthroughs --- only engineering integration.
+We present a complete conceptual design of a tokamak fusion power plant that achieves high-gain driven burn with a magnetic gain $Q = 23.3$ under ITER H98(y,2) confinement scaling. As a physics-based sensitivity cross-check, a gyro-Bohm transport model calibrated to JET D-T data ($C_{\rm GB} = 1.14$, 12.5\% error) yields $Q = 7.3$ with 751~MW of external heating, still above ITER's $Q = 10$ target. The design integrates one-dimensional radial profile corrections, eliminating the need for ad-hoc profile peaking factors, with a computed peaking factor of 1.46 obtained from parabolic profile integrals with ITER-relevant shape parameters ($\alpha_n = 0.2$, $\alpha_T = 0.8$). The physics model includes a self-consistent power balance, bootstrap current scaling, impurity radiation, helium ash equilibrium, profile-consistent MHD stability with shape-dependent no-wall ($\beta_N < 4.07$) and wall-stabilized ($\beta_N < 5.05$) limits, scrape-off-layer divertor modeling with Eich-unbounded heat flux width ($\lambda_q = 0.29$~mm, broadened to 0.95~mm in detachment), tritium breeding neutronics, quench protection, and an artificial-intelligence-based plasma controller. Key output parameters include a major radius of 12.08~m, toroidal field of 11.7~T, fusion power of 5,475~MW thermal (1,762~MW electric net), and an estimated capital cost of \$13.9~billion (\$7,903/kW), competitive with nuclear fission. The confinement model is validated against experimental JET D-T data with error below 7\%. All engineering analyses employ only presently qualified materials (Nb$_3$Sn, SS316LN, tungsten monoblocks, CuCrZr, LiPb) and standard manufacturing processes. The results demonstrate that a commercially viable fusion power plant is achievable with today's technology base, requiring no fundamental scientific breakthroughs --- only engineering integration.
 \end{abstract}
 
 \section{Introduction}
@@ -192,6 +192,13 @@ n_{\text{He}} = \frac{P_{\text{fus}} (\text{reactions/s}) \times \tau_p}{V}
 
 For $P_{\text{fus}} = 5,475$~MW, this yields $n_{\text{He}} = 1.63 \times 10^{19}$~m$^{-3}$, corresponding to a helium fraction $f_{\text{He}} = n_{\text{He}} / n_D = 14.8\%$ relative to the deuterium fuel density. This is below the typical 15--20\% fraction at which alpha particle accumulation begins to significantly dilute the fusion fuel and degrade $Q$. The helium exhaust is achieved via the divertor pumping system, which must maintain a particle exhaust rate of $1.5 \times 10^{21}$~s$^{-1}$.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_tokamak_layout.png}
+\caption{Poloidal cross-section of the reference design showing the major components: central solenoid (CS), toroidal field coils (TF), poloidal field coils (PF1--PF6, D1--D2), plasma, blanket, shield, vacuum vessel (VV), and snowflake divertor targets. Dimensions are labeled in meters.}
+\label{fig:layout}
+\end{figure}
+
 \section{Engineering Integration}
 
 \subsection{Toroidal Field Magnets}
@@ -305,6 +312,32 @@ The TF coil stored energy is 65.4~GJ (16 coils). Inter-coil supporting structure
 
 The magnet system stores 65.4~GJ of magnetic energy (16 coils). Quench detection uses balance-bridge voltage measurement with 50~ms detection time and 100~mV threshold. Each coil is subdivided into six independently protected sections, each with a 0.3~$\Omega$ dump resistor. This subdivision limits the adiabatic hotspot temperature to below 150~K. Protection switches employ N+1 redundant IGBT stacks (25~kV, 40~kA rating).
 
+\subsection{Poloidal Field Coils and Vertical Stability}
+
+The poloidal field system comprises six main PF coils and two snowflake divertor coils, all using NbTi conductor operating at 4.5~K. The coils are positioned outside the TF coil envelope to maximize clearance for diagnostics and heating ports. Table~\ref{tab:pf_coils} summarizes the design parameters.
+
+\begin{table}[h]
+\centering
+\caption{PF coil design summary.}
+\label{tab:pf_coils}
+\begin{tabular}{lccc}
+\hline
+Coil & Position $(R, Z)$ (m) & Current-turns (MA) & Role \\
+\hline
+PF1 & (4.0, 9.5)  & 1.2 & Upper inner shaping \\
+PF2 & (9.5, 8.0)  & 2.0 & Upper vertical stability \\
+PF3 & (15.5, 4.5) & 3.0 & Upper radial position \\
+PF4 & (15.5, $-$4.5) & 3.0 & Lower radial position \\
+PF5 & (9.5, $-$8.0)  & 2.0 & Lower vertical stability \\
+PF6 & (4.0, $-$9.5)  & 1.2 & Lower inner shaping \\
+D1  & (11.5, $-$3.0) & 0.8 & Inner divertor (snowflake) \\
+D2  & (13.5, $-$3.2) & 0.8 & Outer divertor (snowflake) \\
+\hline
+\end{tabular}
+\end{table}
+
+The total PF current-turns sum to 14.0~MA. With $\kappa = 2.71$, the plasma is vertically unstable ($n$-index $< 0$), requiring active feedback control. The passive stabilizing shell (vacuum vessel wall at $\sim 1.2a$) provides a vertical growth time of $\sim 30$~ms, sufficient for the PF2/PF5 coils to provide feedback stabilization with a 10~ms control loop. The PF coil system has a total mass of 1,009~tonnes and an estimated cost of \$930~M including power supplies, cryoplant, and control infrastructure.
+
 \subsection{Vacuum Vessel and Maintenance}
 
 The vacuum vessel is an 80~mm double-wall SS316LN structure with a mass of 22,488~tonnes. Hoop stress is 30~MPa (safety factor 23), and the buckling safety factor is 885. Eight equatorial ports and sixteen upper/lower ports provide access for heating, diagnostics, and remote maintenance.
@@ -410,10 +443,15 @@ Burn time & 1.5 & hours \\
 TF stored energy & 65.4 & GJ \\
 TF coil mass & 18,000 & tonnes \\
 TF peak field & 15.2 & T \\
+PF coils & 6 + 2 divertor & --- \\
+PF total current-turns & 14.0 & MA-turns \\
+PF coil mass & 1,009 & tonnes \\
+PF conductor & NbTi & --- \\
+Vertical stability & Active (feedback) & --- \\
 CS flux available & 1,049 & Wb \\
 CS ramp-up required & 509 & Wb \\
-Total cost & \$13.0 & B \\
-Cost per kWe & \$7,375 & \$/kW \\
+Total cost & \$13.9 & B \\
+Cost per kWe & \$7,903 & \$/kW \\
 LCOE & \$104 & \$/MWh \\
 Plasma volume & 596 & m$^3$ \\
 \bottomrule
@@ -468,7 +506,7 @@ $R_0$ (m) & 6.2 & 3.3 & 8.0--9.0 & 12.08 \\
 $B_0$ (T) & 5.3 & 12.2 & 5.5--6.0 & 11.7 \\
 $P_{\text{fus}}$ (MW) & 500 & 50--140 & 2,000 & 5,475 \\
 $P_{\text{net}}$ (MW$_e$) & 0 (test) & $\sim$0 & $\sim$500 & 1,762 \\
-Cost (\$/kW) & N/A & $\sim$\$200M/MW & $\sim$\$15k/kW & \$7,224 \\
+Cost (\$/kW) & N/A & $\sim$\$200M/MW & $\sim$\$15k/kW & \$7,903 \\
 Confinement model & H98 & TRANSP+TGLF & H98+ASTRA & H98 + GB \\
 MHD stability & Troyon & DCON & Troyon & Profile-consistent \\
 Divertor model & SOLPS & SOLPS & SOLPS & Eich+SO \\

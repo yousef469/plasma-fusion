@@ -46,9 +46,10 @@ A complete conceptual design of a tokamak fusion power plant, integrating 1.5D r
 | Burn time | 1.5 hours |
 | TF stored energy | 65.4 GJ |
 | TF peak field | 15.2 T (Nb₃Sn, σ_case=493 MPa, margin 2.0×) |
+| PF coils | 6 main + 2 divertor (NbTi, 14.0 MA-turns, 1,009 t) |
 | CS flux available / required | 1,049 Wb / 509 Wb (margin 2.1×) |
-| Total capital cost | \$13.0 B |
-| Cost per kWe | \$7,375/kW |
+| Total capital cost | \$13.9 B |
+| Cost per kWe | \$7,903/kW |
 | LCOE | \$104/MWh |
 
 ## Design Philosophy
@@ -69,6 +70,8 @@ A complete conceptual design of a tokamak fusion power plant, integrating 1.5D r
 | `tbr_model.py` | HCPB tritium breeding (calibrated to MCNP) |
 | `heating_system.py` | Auxiliary heating sizing (NBI, EC, IC) |
 | `ntm_stabilization.py` | ECCD for NTM control |
+| `startup.py` | Staged startup scenario with CS flux budget |
+| `figures.py` | All publication-quality figures (10 total) |
 | `design_optimizer.py` | Genetic algorithm design optimization |
 | `design_scorer.py` | Harrington desirability scoring |
 | `B_HIGH_FIDELITY.py` | Monte Carlo uncertainty analysis |

@@ -23,7 +23,7 @@ from physics_engine import (
     quick_eval, solve_power_balance, radial_profiles, integrate_profiles,
     tokamak_volume, plasma_surface_area, lh_threshold_power,
     tf_coil_peak_field, tf_ripple, compute_beta, bootstrap_fraction,
-    capital_cost_estimate, bosch_hale_sigma_v
+    capital_cost_estimate, bosch_hale_sigma_v, pf_coil_system
 )
 from mhd_stability import full_stability_analysis
 from divertor_sol import divertor_analysis
@@ -271,19 +271,34 @@ def fig_power_balance(save=True):
 
 
 def fig_cost_breakdown(save=True):
+    r = quick_eval(D, "SNOWFLAKE")
+    # Map engine costs to chart categories
+    C_TF = r["cost_TF_coils_MS"]
+    C_PF = r["cost_PF_coils_MS"]
+    C_PF_CS = C_PF + 500  # combine PF + CS (CS ~$500M)
+    C_blanket = r["cost_blanket_MS"]
+    C_bop = r["cost_turbine_MS"]
+    C_cool = r["cost_cooling_MS"]
+    C_trit = r["cost_tritium_plant_MS"]
+    C_site = r["cost_site_MS"]
+    C_IC = r["cost_IC_MS"]
+    C_aux = r["cost_aux_MS"]
+    base = C_TF + C_PF_CS + C_blanket + C_bop + C_cool + C_trit + C_site + C_IC + C_aux
+    contingency = base * 0.15
+
     costs = {
-        "TF coils (Nb$_3$Sn)": 3725,
-        "PF + CS coils": 1800,
-        "Blanket (HCPB)": 748,
+        "TF coils (Nb$_3$Sn)": C_TF,
+        "PF + CS coils": C_PF_CS,
+        "Blanket (HCPB)": C_blanket,
         "Vacuum vessel": 200,
         "Cryostat + cryoplant": 600,
         "Divertor (W)": 50,
-        "Heating + CD": 300,
-        "Balance of plant": 2168,
-        "Cooling systems": 1084,
-        "Tritium plant": 1000,
-        "Site + assembly": 800,
-        "Contingency + indirect": 1530,
+        "Heating + CD": C_aux,
+        "Balance of plant": C_bop,
+        "Cooling systems": C_cool,
+        "Tritium plant": C_trit,
+        "Site + assembly": C_site,
+        "Contingency + indirect": round(contingency),
     }
     total = sum(costs.values())
 
@@ -313,7 +328,8 @@ def fig_cost_breakdown(save=True):
         y -= 0.075
     ax2.set_title("Cost Breakdown", fontsize=12, pad=10)
 
-    fig.suptitle(f"Total Project Cost: ${total / 1000:.2f}B (${total * 1000 / 1762:.0f}/kW$_e$)", fontsize=13)
+    P_net = r.get("P_net_electric_MW", 1762)
+    fig.suptitle(f"Total Project Cost: ${total / 1000:.2f}B (${total * 1000 / max(P_net, 1):.0f}/kW$_e$)", fontsize=13)
     plt.tight_layout()
     if save:
         fig.savefig("fig_cost.png")
@@ -556,6 +572,262 @@ def fig_eccd_system(save=True):
     plt.close(fig)
 
 
+def fig_tokamak_layout(save=True):
+    """
+    Full tokamak poloidal cross-section with all major components,
+    coil systems, and structural regions dimensioned.
+    """
+    R0, a, kappa = 12.08, 0.96, 2.71
+    delta_u, delta_l = 0.30, 0.30
+
+    # Derived geometry from physics_engine
+    R_TF_min = 9.32       # m, TF inner leg (plasma-facing edge)
+    w_TF_inner = 2.5      # m, TF inner leg radial width (winding + case)
+    h_TF = 20.0           # m, TF coil total height (±10 m)
+    R_TF_outer = 14.8     # m, TF outer leg approx position
+
+    # CS geometry
+    R_CS_inner = 0.75
+    R_CS_outer = 3.10
+    h_CS = 15.0
+
+    # Inboard build
+    r_blk = 0.8
+    r_shd = 0.5
+    r_vv = 0.3
+    r_gap = 0.1
+    inboard_build = r_blk + r_shd + r_vv + r_gap
+
+    R_plasma_inner = R0 - a  # 11.12 m
+    R_plasma_outer = R0 + a  # 13.04 m
+
+    # PF coil positions (quick_eval data)
+    pf_coords = {
+        "PF1": (4.0, 9.5), "PF2": (9.5, 8.0), "PF3": (15.5, 4.5),
+        "PF4": (15.5, -4.5), "PF5": (9.5, -8.0), "PF6": (4.0, -9.5),
+        "D1": (11.5, -3.0), "D2": (13.5, -3.2),
+    }
+
+    fig, ax = plt.subplots(figsize=(10, 12))
+
+    # ── Plasma boundary D-shape ──────────────────────────────────────────
+    theta = np.linspace(0, 2 * np.pi, 300)
+    delta_arr = np.where(theta < np.pi, delta_u, delta_l)
+    R_plasma = R0 + a * np.cos(theta + delta_arr * np.sin(theta))
+    Z_plasma = kappa * a * np.sin(theta)
+    ax.fill(R_plasma, Z_plasma, color="#3498db", alpha=0.25,
+            edgecolor="#2e86c1", lw=2, label="Plasma", zorder=5)
+
+    # ── Inboard structural column (TF inner leg + case + support) ────────
+    z_col = np.linspace(-h_TF / 2, h_TF / 2, 50)
+    R_col_left = np.full_like(z_col, R_TF_min)
+    R_col_right = np.full_like(z_col, R_TF_min + w_TF_inner)
+    ax.fill_betweenx(z_col, R_col_left, R_col_right,
+                     color="#d5d8dc", edgecolor="#808b96", lw=1.5,
+                     hatch="////", alpha=0.5, label="TF inner leg", zorder=3)
+
+    # ── TF coil D-shape outline (outer arc) ──────────────────────────────
+    # Outer D-curve: from top inner to bottom inner via outer midplane
+    N_d = 150
+    theta_d = np.linspace(np.pi / 2, -np.pi / 2, N_d)
+    p_shape = 0.65  # D-shape parameter (<1 = more pointed)
+    R_outer_curve = (R_TF_min + w_TF_inner
+                     + (R_TF_outer - R_TF_min - w_TF_inner)
+                     * np.abs(np.cos(theta_d)) ** p_shape)
+    Z_outer_curve = (h_TF / 2) * np.sin(theta_d)
+
+    # Inner curve (parallel to outer, offset by w_TF)
+    w_TF_thickness = 1.2  # approximate TF coil thickness in R direction
+    R_inner_curve = (R_TF_min + w_TF_inner - w_TF_thickness
+                     + (R_TF_outer - w_TF_thickness - R_TF_min - w_TF_inner + w_TF_thickness)
+                     * np.abs(np.cos(theta_d)) ** p_shape)
+
+    # Combine to make TF coil D-outline
+    R_TF_outline = np.concatenate([R_outer_curve, R_inner_curve[::-1], [R_outer_curve[0]]])
+    Z_TF_outline = np.concatenate([Z_outer_curve, Z_outer_curve[::-1], [Z_outer_curve[0]]])
+    ax.fill(R_TF_outline, Z_TF_outline, color="#d5d8dc", edgecolor="#808b96",
+            lw=2, hatch="//", alpha=0.6, label="TF coil", zorder=2)
+
+    # TF coil structural case outer highlight
+    ax.plot(R_outer_curve, Z_outer_curve, color="#5d6d7e", lw=3, zorder=4)
+    ax.plot(R_inner_curve, Z_outer_curve, color="#5d6d7e", lw=2, zorder=4)
+
+    # Outer leg cross-section indicator
+    z_outer_leg = np.linspace(-h_TF * 0.35, h_TF * 0.35, 10)
+    R_outer_leg_L = np.full_like(z_outer_leg, R_TF_outer - 0.6)
+    R_outer_leg_R = np.full_like(z_outer_leg, R_TF_outer + 0.6)
+    ax.fill_betweenx(z_outer_leg, R_outer_leg_L, R_outer_leg_R,
+                     color="#d5d8dc", edgecolor="#808b96", hatch="//",
+                     alpha=0.5, zorder=3)
+
+    # ── Central solenoid ─────────────────────────────────────────────────
+    z_CS = np.linspace(-h_CS / 2, h_CS / 2, 50)
+    ax.fill_betweenx(z_CS, R_CS_inner, R_CS_outer,
+                     color="#e67e22", alpha=0.5, edgecolor="#d35400", lw=2,
+                     label="CS", zorder=5)
+    # CS winding indication
+    R_CS_mid = (R_CS_inner + R_CS_outer) / 2
+    ax.plot([R_CS_mid], [0], marker="s", color="#d35400", markersize=10)
+
+    # ── Vacuum vessel + blanket + shield (inboard) ──────────────────────
+    # Inboard: from R_plasma_inner inward
+    R_VV_inner_in = R_plasma_inner - r_blk - r_shd - r_vv - r_gap
+    R_shield_in = R_plasma_inner - r_blk - r_shd
+    R_blanket_in = R_plasma_inner - r_blk
+
+    # Outboard: from R_plasma_outer outward
+    outboard_build = 1.6
+    R_blanket_out = R_plasma_outer + 0.6
+    R_shield_out = R_blanket_out + 0.4
+    R_VV_out = R_shield_out + 0.3
+
+    # VV region (inboard)
+    z_vv = np.linspace(-h_TF / 2 + 2, h_TF / 2 - 2, 50)
+    ax.fill_betweenx(z_vv, R_VV_inner_in, R_plasma_inner - r_blk - r_shd,
+                     color="#aeb6bf", alpha=0.3, edgecolor="#5d6d7e", lw=1,
+                     label="Shield", zorder=4)
+
+    # Simple VV outline
+    z_fill = np.linspace(-h_TF / 2 + 2.5, h_TF / 2 - 2.5, 30)
+    ax.fill_betweenx(z_fill, R_VV_inner_in, R_plasma_inner - r_blk - r_shd - r_vv,
+                     color="#85929e", alpha=0.2, edgecolor="#5d6d7e", lw=1.5,
+                     label="VV", zorder=4)
+
+    # Blanket (inboard + outboard simplified)
+    z_blk = np.linspace(-kappa * a - 0.1, kappa * a + 0.1, 30)
+    ax.fill_betweenx(z_blk, R_plasma_inner - r_blk, R_plasma_inner,
+                     color="#e74c3c", alpha=0.15, edgecolor="#c0392b", lw=1,
+                     hatch="...", label="Blanket", zorder=4)
+    ax.fill_betweenx(z_blk, R_plasma_outer, R_plasma_outer + 0.6,
+                     color="#e74c3c", alpha=0.15, edgecolor="#c0392b", lw=1,
+                     hatch="...", zorder=4)
+
+    # ── Divertor targets (lower) ─────────────────────────────────────────
+    # Snowflake divertor with two targets
+    z_xpt = -kappa * a * 1.02  # X-point Z position
+    # Inner divertor leg
+    R_div_in = np.linspace(R0 - a * 0.6, R0 - a * 0.3, 10)
+    Z_div_in = np.linspace(z_xpt, z_xpt - 0.5, 10)
+    ax.plot(R_div_in, Z_div_in, color="#c0392b", lw=4, label="Divertor target", zorder=6)
+    # Outer divertor leg
+    R_div_out = np.linspace(R0 + a * 0.5, R0 + a * 0.8, 10)
+    Z_div_out = np.linspace(z_xpt, z_xpt - 0.5, 10)
+    ax.plot(R_div_out, Z_div_out, color="#c0392b", lw=4, zorder=6)
+    # Third leg for snowflake
+    R_div_mid = np.linspace(R0, R0 + a * 0.3, 10)
+    Z_div_mid = np.linspace(z_xpt, z_xpt - 0.7, 10)
+    ax.plot(R_div_mid, Z_div_mid, color="#c0392b", lw=4, zorder=6)
+    # X-point marker
+    ax.plot(R0 - a * 0.1, z_xpt, "rx", markersize=8, markeredgewidth=2, zorder=7)
+    ax.text(R0 - a * 0.1 + 0.1, z_xpt - 0.3, "X-point", fontsize=8,
+            color="#c0392b", style="italic")
+
+    # ── PF coils ─────────────────────────────────────────────────────────
+    pf_colors = {"PF1": "#8e44ad", "PF2": "#2ecc71", "PF3": "#e67e22",
+                 "PF4": "#e67e22", "PF5": "#2ecc71", "PF6": "#8e44ad",
+                 "D1": "#e74c3c", "D2": "#e74c3c"}
+
+    for name, (R_pf, Z_pf) in pf_coords.items():
+        is_div = name.startswith("D")
+        r_coil = 0.35 if not is_div else 0.25
+        circle = plt.Circle((R_pf, Z_pf), r_coil, color=pf_colors[name],
+                            ec="#2c3e50", lw=1.5, alpha=0.8, zorder=10)
+        ax.add_patch(circle)
+        label_offset = 0.6
+        ax.text(R_pf + label_offset, Z_pf, name, fontsize=8, fontweight="bold",
+                ha="center", va="center", color="#2c3e50",
+                bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="gray", alpha=0.8))
+
+    # ── Ports ────────────────────────────────────────────────────────────
+    # Equatorial port
+    port_z = 0
+    port_R_start = R_plasma_outer + 0.6 + 0.4 + 0.3 + 0.2
+    port_R_end = port_R_start + 1.5
+    port_half_h = 0.8
+    ax.plot([port_R_start, port_R_end], [port_z - port_half_h, port_z - port_half_h],
+            color="#5d6d7e", lw=2, zorder=2)
+    ax.plot([port_R_start, port_R_end], [port_z + port_half_h, port_z + port_half_h],
+            color="#5d6d7e", lw=2, zorder=2)
+    ax.plot([port_R_end, port_R_end], [port_z - port_half_h, port_z + port_half_h],
+            color="#5d6d7e", lw=2, zorder=2)
+    ax.text(port_R_end / 2 + 5, port_z, "Equatorial port", fontsize=8,
+            ha="center", va="center", color="#5d6d7e", rotation=90)
+
+    # Upper port
+    ax.plot([port_R_start, port_R_end], [h_TF / 2 - 1.5, h_TF / 2 - 1.5],
+            color="#5d6d7e", lw=2, zorder=2)
+    ax.plot([port_R_start, port_R_end], [h_TF / 2 - 0.3, h_TF / 2 - 0.3],
+            color="#5d6d7e", lw=2, zorder=2)
+    ax.text(port_R_start + 3, h_TF / 2 - 0.9, "Upper port", fontsize=8,
+            ha="center", va="center", color="#5d6d7e", rotation=90)
+
+    # ── Dimension annotations ────────────────────────────────────────────
+    # R0 arrow
+    ax.annotate("", xy=(0, -11.5), xytext=(R0, -11.5),
+                arrowprops=dict(arrowstyle="<->", color="k", lw=1.5))
+    ax.text(R0 / 2, -12.0, "$R_0 = 12.08$ m", fontsize=10, ha="center",
+            va="center", bbox=dict(fc="white", ec="none", alpha=0.7))
+
+    # a arrow
+    ax.annotate("", xy=(R0, -12.5), xytext=(R0 + a, -12.5),
+                arrowprops=dict(arrowstyle="<->", color="k", lw=1.5))
+    ax.text(R0 + a / 2, -13.0, "$a = 0.96$ m", fontsize=9, ha="center")
+
+    # κa arrow
+    ax.annotate("", xy=(17.0, 0), xytext=(17.0, kappa * a),
+                arrowprops=dict(arrowstyle="<->", color="k", lw=1.5))
+    ax.text(17.5, kappa * a / 2, "$\\kappa a = 2.60$ m", fontsize=9,
+            ha="center", va="center")
+
+    # Inboard build
+    ax.annotate("", xy=(R_plasma_inner, -11.0), xytext=(R_TF_min + w_TF_inner, -11.0),
+                arrowprops=dict(arrowstyle="<->", color="#5d6d7e", lw=1.5))
+    ax.text(R0 - a - 0.8, -10.5, "Inboard\nbuild 1.8 m", fontsize=8,
+            ha="center", va="center", color="#5d6d7e")
+
+    # CS dimension
+    ax.annotate("", xy=(R_CS_inner, 9.0), xytext=(R_CS_outer, 9.0),
+                arrowprops=dict(arrowstyle="<->", color="#d35400", lw=1.5))
+    ax.text((R_CS_inner + R_CS_outer) / 2, 9.5, "$R_{CS}=0.75\\!-\\!3.10$ m",
+            fontsize=8, ha="center", color="#d35400")
+
+    # ── Legend ───────────────────────────────────────────────────────────
+    # Custom legend entries using proxy artists
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor="#3498db", alpha=0.25, edgecolor="#2e86c1", label="Plasma"),
+        Patch(facecolor="#e74c3c", alpha=0.15, edgecolor="#c0392b", label="Blanket"),
+        Patch(facecolor="#aeb6bf", alpha=0.3, edgecolor="#5d6d7e", label="Shield"),
+        Patch(facecolor="#85929e", alpha=0.2, edgecolor="#5d6d7e", label="VV"),
+        Patch(facecolor="#e67e22", alpha=0.5, edgecolor="#d35400", label="CS"),
+        Patch(facecolor="#d5d8dc", alpha=0.5, edgecolor="#808b96", label="TF coil"),
+        Patch(facecolor="#8e44ad", alpha=0.8, edgecolor="#2c3e50", label="PF coil"),
+        plt.Line2D([0], [0], color="#c0392b", lw=3, label="Divertor target"),
+    ]
+    ax.legend(handles=legend_elements, fontsize=8, loc="upper left",
+              ncol=2, framealpha=0.9)
+
+    # ── Axis settings ────────────────────────────────────────────────────
+    ax.set_xlim(-0.5, 18.5)
+    ax.set_ylim(-13.5, 13.5)
+    ax.set_aspect("equal")
+    ax.set_xlabel("$R$ (m)", fontsize=12)
+    ax.set_ylabel("$Z$ (m)", fontsize=12)
+    ax.set_title("Tokamak Poloidal Cross-Section", fontsize=14, fontweight="bold")
+    ax.grid(alpha=0.15)
+    ax.tick_params(labelsize=9)
+
+    # Symmetry line
+    ax.axvline(0, color="gray", ls="--", lw=1, alpha=0.4)
+    ax.text(0.2, 13.0, "Axis of symmetry", fontsize=8, color="gray", rotation=90)
+
+    plt.tight_layout()
+    if save:
+        fig.savefig("fig_tokamak_layout.png")
+        print("  [+] fig_tokamak_layout.png")
+    plt.close(fig)
+
+
 def generate_all():
     os.makedirs("figures", exist_ok=True)
     os.chdir("figures")
@@ -569,6 +841,7 @@ def generate_all():
     fig_plasma_cross_section()
     fig_sensitivity_tornado()
     fig_eccd_system()
+    fig_tokamak_layout()
     os.chdir("..")
     print("\nAll figures generated in figures/")
 

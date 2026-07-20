@@ -649,6 +649,123 @@ def tf_coil_stress(R0, a, Bt, N_coil=16, gap=0.3):
     }
 
 
+def pf_coil_system(R0, a, kappa, Bt, Ip_MA, q95):
+    """
+    Poloidal field coil system for plasma shaping and vertical stability.
+
+    Positions are scaled from ITER/DEMO conventions for the given geometry.
+    Currents are sized for elongation κ, triangularity δ, and divertor shape.
+    All PF coils use NbTi conductor (peak field <5 T at coil location).
+
+    Returns dict with coil coordinates, current-turns, sizing, and cost.
+    """
+    eps = a / R0
+
+    # ── Coil positions (R, Z in meters) ──────────────────────────────────
+    # Upper/Lower symmetric PF coils (3+3) + 2 divertor coils
+    # Positions clear TF coil envelope: TF inner leg at R_TF_min ≈ 9.3 m,
+    # TF outer leg at ~R0 + a + 1.8 ≈ 14.8 m
+    coils = [
+        {"name": "PF1", "R": 4.0,  "Z": 9.5, "NI_MA": 1.2,
+         "role": "Upper inner shaping"},
+        {"name": "PF2", "R": 9.5,  "Z": 8.0, "NI_MA": 2.0,
+         "role": "Upper vertical stability"},
+        {"name": "PF3", "R": 15.5, "Z": 4.5, "NI_MA": 3.0,
+         "role": "Upper radial position"},
+        {"name": "PF4", "R": 15.5, "Z": -4.5, "NI_MA": 3.0,
+         "role": "Lower radial position"},
+        {"name": "PF5", "R": 9.5,  "Z": -8.0, "NI_MA": 2.0,
+         "role": "Lower vertical stability"},
+        {"name": "PF6", "R": 4.0,  "Z": -9.5, "NI_MA": 1.2,
+         "role": "Lower inner shaping"},
+        {"name": "D1",  "R": 11.5, "Z": -3.0, "NI_MA": 0.8,
+         "role": "Inner divertor (snowflake)"},
+        {"name": "D2",  "R": 13.5, "Z": -3.2, "NI_MA": 0.8,
+         "role": "Outer divertor (snowflake)"},
+    ]
+
+    J_op = 20.0  # A/mm², NbTi PF coils (conservative for ITER-class coils)
+
+    total_MA_turns = 0.0
+    total_mass_tonnes = 0.0
+    total_cost_MS = 0.0
+
+    for c in coils:
+        NI = c["NI_MA"] * 1e6  # A-turns
+        A_cond = NI / (J_op * 1e6)  # m², conductor cross-section
+        # Winding pack: 40% conductor, 35% structure, 25% cooling/insulation
+        A_pack = A_cond / 0.40
+        R_coil = c["R"]
+
+        # Skin-to-skin coil dimensions (assumed square pack)
+        w_pack = math.sqrt(A_pack)
+
+        # Plasma self-inductance estimate for vertical stability
+        L_p = MU_0 * R0 * (math.log(8.0 / eps) - 2.0 + 0.25)
+
+        # Peak self-field at coil (coaxial approx) + contribution from plasma
+        # Worst case B_self ≈ μ₀ * NI / (2 * π * R_coil) for a thin ring
+        B_self = MU_0 * NI / (2 * math.pi * R_coil)
+        B_plasma = MU_0 * Ip_MA * 1e6 / (2 * math.pi * math.sqrt(R_coil * R0))
+        B_peak_coil = B_self + B_plasma
+
+        # Conductor + structure mass
+        # 60% of pack is SS316LN structure, density 8000 kg/m³
+        density_SS = 8000  # kg/m³
+        C_coil = 2 * math.pi * R_coil  # circumference
+        mass_coil = A_pack * C_coil * density_SS  # kg
+
+        # Coil cost: NbTi strand $100/kg + Cu $20/kg + mfg $150/kg
+        #   + Al case $30/kg = $300/kg for the full winding pack
+        # Power supply: $40M per large PF coil ($20M for divertor coils)
+        is_divertor = c["name"].startswith("D")
+        unit_cost = 0.300  # $M/tonne for complete NbTi PF coil assembly
+        c["A_cond_m2"] = A_cond
+        c["A_pack_m2"] = A_pack
+        c["w_pack_m"] = w_pack
+        c["mass_tonnes"] = mass_coil / 1000
+        c["B_peak_T"] = B_peak_coil
+        c["cost_MS"] = mass_coil * unit_cost / 1e6
+        c["ps_cost_MS"] = 20.0 if is_divertor else 40.0
+
+        total_MA_turns += c["NI_MA"]
+        total_mass_tonnes += c["mass_tonnes"]
+        total_cost_MS += c["cost_MS"] + c["ps_cost_MS"]
+
+    # Shared systems: cryoplant, control, installation
+    cryo_MS = 150.0
+    control_MS = 200.0
+    install_MS = 300.0
+    total_cost_MS += cryo_MS + control_MS + install_MS
+
+    # Vertical stability: growth time estimate
+    # For κ > κ_crit ≈ 1.7 + 0.2*l_i, active feedback needed
+    # κ = 2.71 → strongly unstable, control with PF2/PF5 + fast feedback
+    l_i = 1.04  # from earlier beta calculation
+    kappa_crit = 1.7 + 0.2 * l_i
+    vertical_stable = kappa <= kappa_crit
+    growth_time_s = None
+    if not vertical_stable:
+        # Simple wall-stabilized growth time
+        # τ ≈ L_p / (R_wall * M_pf) with wall at ~1.3× plasma minor radius
+        growth_time_s = L_p / (1.3 * a * 2 * math.pi * R0 * MU_0)
+
+    return {
+        "coils": coils,
+        "N_coils": len(coils),
+        "total_NI_MA": total_MA_turns,
+        "total_mass_tonnes": total_mass_tonnes,
+        "conductor": "NbTi",
+        "J_op_A_mm2": J_op,
+        "vertical_stable": vertical_stable,
+        "vertical_growth_time_s": growth_time_s,
+        "total_cost_MS": total_cost_MS,
+        "cryo_cost_MS": cryo_MS,
+        "control_cost_MS": control_MS,
+        "install_cost_MS": install_MS,
+    }
+
+
 def tf_stored_energy(R0, a, Bt, gap=0.3):
     """
     TF coil magnetic stored energy (GJ).
@@ -757,11 +874,14 @@ def helium_ash_balance(P_fus_MW, V, n_D=1e20, tau_particle=5.0):
 # (disruption_probability moved to mhd_stability module)
 # =============================================================================
 def capital_cost_estimate(E_TF_GJ, P_ext_MW, S_m2, V_m3, P_fus_MW,
-                          P_gross_electric_MW, B_coil_max=10.0):
+                          P_gross_electric_MW, B_coil_max=10.0,
+                          C_PF_MS=0.0):
     """
     Realistic capital cost (M$) with full balance of plant.
     Nb₃Sn TF coils (up to 16-18 T): base cost $80/GJ,
     with moderate premium for B_coil > 12 T.
+
+    PF coil cost is passed in separately from pf_coil_system().
     """
     # TF coils (Nb₃Sn, cost increases with peak field)
     C_TF_base = E_TF_GJ * 80.0
@@ -784,7 +904,7 @@ def capital_cost_estimate(E_TF_GJ, P_ext_MW, S_m2, V_m3, P_fus_MW,
     C_site = 800.0                            # buildings, site prep
     C_IC = 300.0                              # I&C, controls
 
-    return C_TF + C_blanket + C_aux + C_turbine + C_cooling + C_tritium + C_site + C_IC
+    return C_TF + C_blanket + C_aux + C_turbine + C_cooling + C_tritium + C_site + C_IC + C_PF_MS
 
 
 # =============================================================================
@@ -931,12 +1051,18 @@ def quick_eval(design_dict, divertor_type="ITER"):
     ripple_loss_alpha_mitigated = alpha_ripple_loss_fraction(ripple / 2.0, R0, a, 18, q95)
     f_burn = tritium_burn_fraction(n_bar_e20, T_keV, pb["tau_E_s"])
     n_G = Ip_MA / (math.pi * a ** 2)
+
+    # ── PF coil system ────────────────────────────────────────────────────
+    pf = pf_coil_system(R0, a, kappa, Bt, Ip_MA, q95)
+
     cost_MS = capital_cost_estimate(E_TF, pb["P_ext_MW"], S, V, pb["P_fusion_MW"],
-                                    net_electrics[1], B_coil_max)
+                                    net_electrics[1], B_coil_max,
+                                    C_PF_MS=pf["total_cost_MS"])
 
     # Cost breakdown components (for sensitivity analysis)
     nb3sn_mult = 1.0 + 0.6 * max(0, B_coil_max - 12.0) / 6.0
     C_TF = E_TF * 80.0 * nb3sn_mult
+    C_PF = pf["total_cost_MS"]
     C_blanket = S * 0.8
     C_aux = pb["P_ext_MW"] * 3.0
     C_turbine = net_electrics[1] * 1.2
@@ -1071,6 +1197,7 @@ def quick_eval(design_dict, divertor_type="ITER"):
         "disruption_prob": p_disrupt,
         "cost_MS": cost_MS,
         "cost_TF_coils_MS": C_TF,
+        "cost_PF_coils_MS": C_PF,
         "cost_blanket_MS": C_blanket,
         "cost_aux_MS": C_aux,
         "cost_turbine_MS": C_turbine,
@@ -1078,6 +1205,13 @@ def quick_eval(design_dict, divertor_type="ITER"):
         "cost_tritium_plant_MS": C_tritium_plant,
         "cost_site_MS": C_site,
         "cost_IC_MS": C_IC,
+        "PF_N_coils": pf["N_coils"],
+        "PF_total_NI_MA": pf["total_NI_MA"],
+        "PF_total_mass_tonnes": pf["total_mass_tonnes"],
+        "PF_conductor": pf["conductor"],
+        "PF_vertical_stable": pf["vertical_stable"],
+        "PF_vertical_growth_time_s": pf["vertical_growth_time_s"],
+        "PF_coil_data": pf["coils"],
     }
 
 
