@@ -30,9 +30,9 @@
 !fusion-paper.zip
 
 # Figures
+!figures/
+!figures/*.png
 !figures.py
-!figures/**
-!figures/*
 
 # Startup scenario
 !startup.py
