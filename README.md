@@ -42,7 +42,7 @@ A complete conceptual design of a tokamak fusion power plant, integrating 1.5D r
 | λq raw / effective | 0.29 mm / 0.95 mm |
 | TBR (LiPb baseline) | 0.97 |
 | TBR (HCPB upgrade) | 1.17 (self-sufficient ✓) |
-| ECCD power (NTM control) | 10.9 MW (11 gyrotrons) |
+| ECCD power (NTM control) | 10.9 MW (22×0.5 MW, 328 GHz, TRL 3) |
 | Burn time | 7.1 hours |
 | TF stored energy | 65.4 GJ |
 | Total capital cost | \$12.73 B |
@@ -126,7 +126,7 @@ The plasma controller uses a neural network with 6,608 parameters trained via a 
 | Vacuum Vessel | \$0.20 B |
 | Blanket (HCPB) | \$0.75 B |
 | Divertor (Tungsten monoblocks) | \$0.05 B |
-| ECCD (11 × 1 MW gyrotrons) | \$0.04 B |
+| ECCD (22 × 0.5 MW, 328 GHz gyrotrons) | \$0.08 B |
 | Balance of Plant | ~\$5.5 B |
 | Total Project Cost (FOAK) | **\$12.73 B** |
 | Cost per kWe | **\$7,224/kW** |

@@ -911,8 +911,14 @@ def quick_eval(design_dict, divertor_type="ITER"):
 
         # NTM ECCD stabilization
         "P_ECCD_MW": P_ECCD_MW,
+        "P_ECCD_launched_MW": eccd.get("P_ECCD_launched_MW", P_ECCD_MW),
         "ECCD_gyrotrons": n_gyrotrons,
+        "ECCD_freq_GHz": eccd.get("gyrotron_freq_GHz", 0),
+        "ECCD_gyrotron_TRL": eccd.get("gyrotron_TRL", 0),
+        "ECCD_gyrotron_status": eccd.get("gyrotron_status", ""),
         "ECCD_recirc_MW": eccd["recirc_P_ECCD_MW"],
+        "ECCD_cost_MS": eccd.get("cost_MS", 0),
+        "ECCD_n_ports": eccd.get("n_ports", 0),
 
         # Gyro-Bohm heating system sizing
         "heating_P_wall_plug_MW": htg["wall_plug_power_MW"],

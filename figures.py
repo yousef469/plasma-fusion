@@ -470,6 +470,92 @@ def fig_sensitivity_tornado(save=True):
     plt.close(fig)
 
 
+def fig_eccd_system(save=True):
+    """ECCD system design — power, cost, TRL assessment."""
+    eng = quick_eval(D, divertor_type='SNOWFLAKE')
+
+    fig, axes = plt.subplots(1, 3, figsize=(11, 3.8),
+                             gridspec_kw={"width_ratios": [1, 0.9, 1.1]})
+
+    # Panel 1: Power breakdown
+    ax = axes[0]
+    categories = [
+        "At plasma\n(q=3/2 + q=2)",
+        "Transmission\nloss (32%)",
+        "Wall-plug\n(40% eff.)",
+    ]
+    values = [
+        eng["P_ECCD_MW"],
+        eng["P_ECCD_launched_MW"] - eng["P_ECCD_MW"],
+        eng["ECCD_recirc_MW"] - eng["P_ECCD_launched_MW"],
+    ]
+    colors_p = ["#27ae60", "#f39c12", "#e74c3c"]
+    bars = ax.barh(categories, values, color=colors_p, height=0.5,
+                   edgecolor="black", lw=0.5)
+    ax.set_xlabel("Power (MW)")
+    ax.set_title("ECCD Power Budget", fontsize=12)
+    for bar, v in zip(bars, values):
+        ax.text(bar.get_width() + 0.3, bar.get_y() + bar.get_height() / 2,
+                f"{v:.1f} MW", va="center", fontsize=9)
+    total = sum(values)
+    ax.text(total * 0.5, -0.6, f"Total wall-plug: {total:.0f} MW  "
+             f"({total/1762*100:.1f}% of P$_{{\\text{{net}}}}$)",
+             ha="center", fontsize=9, transform=ax.get_xaxis_transform())
+    ax.grid(axis="x", alpha=0.2)
+
+    # Panel 2: Gyrotron frequency / TRL
+    ax = axes[1]
+    ax.axis("off")
+    freq = eng["ECCD_freq_GHz"]
+    trl = eng["ECCD_gyrotron_TRL"]
+    status = eng["ECCD_gyrotron_status"].title()
+    n_gyro = eng["ECCD_gyrotrons"]
+    n_ports = eng["ECCD_n_ports"]
+    info_lines = [
+        f"Frequency:  {freq:.0f} GHz",
+        f"TRL:  {trl}  ({status})",
+        f"Gyrotrons:  {n_gyro} × 0.5 MW",
+        f"Ports:  {n_ports}",
+        f"Cost:  {eng['ECCD_cost_MS']:.0f} M USD",
+        "",
+        f"Recirculated:  {eng['ECCD_recirc_MW']:.0f} MW",
+        f"Net reduction:  {eng['ECCD_recirc_MW']/1762*100:.1f}% of P$_{{\\text{{net}}}}$",
+    ]
+    y0 = 0.85
+    for i, line in enumerate(info_lines):
+        ax.text(0.1, y0 - i * 0.10, line, fontsize=9.5,
+                transform=ax.transAxes, va="top")
+    ax.set_title("ECCD System Specs", fontsize=12)
+
+    # Panel 3: Comparison to other reactors
+    ax = axes[2]
+    reactors = ["ITER", "SPARC", "This design"]
+    P_ec = [20, 12, eng["P_ECCD_MW"]]
+    P_net_ref = [500, 50, 1762]
+    rect_recirc = [40, 24, eng["ECCD_recirc_MW"]]
+    x = np.arange(len(reactors))
+    w = 0.30
+    bars1 = ax.bar(x - w/2, P_ec, w, label="EC power (MW)", color="#2e86c1",
+                   edgecolor="black", lw=0.5)
+    bars2 = ax.bar(x + w/2, rect_recirc, w, label="Recirc (MW)", color="#e74c3c",
+                   edgecolor="black", lw=0.5)
+    for bar, v in zip(bars1, P_ec):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2,
+                f"{v} MW", ha="center", fontsize=8)
+    ax.set_xticks(x)
+    ax.set_xticklabels(reactors)
+    ax.set_ylabel("Power (MW)")
+    ax.set_title("ECCD Comparison", fontsize=12)
+    ax.legend(fontsize=8)
+    ax.grid(axis="y", alpha=0.2)
+
+    plt.tight_layout()
+    if save:
+        fig.savefig("fig_eccd.png")
+        print("  [+] fig_eccd.png")
+    plt.close(fig)
+
+
 def generate_all():
     os.makedirs("figures", exist_ok=True)
     os.chdir("figures")
@@ -482,6 +568,7 @@ def generate_all():
     fig_tbr_sensitivity()
     fig_plasma_cross_section()
     fig_sensitivity_tornado()
+    fig_eccd_system()
     os.chdir("..")
     print("\nAll figures generated in figures/")
 

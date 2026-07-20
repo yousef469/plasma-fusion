@@ -140,7 +140,7 @@ Stability analysis replaces the simple Troyon limit ($\beta_N < 3.5$) with a pro
 \begin{itemize}[nosep]
     \item \textbf{No-wall ideal beta limit}: $\beta_{N,\text{no-wall}} = 4.07$, obtained from ITER Physics Basis shape-dependent scaling accounting for elongation ($\kappa = 2.71$), triangularity ($\delta = 0.30$), internal inductance ($l_i = 1.04$), and safety factor ($q_{95} = 3.1$). The design $\beta_N = 3.08$ has a 24\% margin to this limit.
     \item \textbf{Wall-stabilized beta limit}: A conducting wall at $b_{\text{wall}} = 1.6$ (ITER reference) raises the ideal limit to $\beta_{N,\text{wall}} = 5.05$, providing a 64\% margin against the ideal wall limit.
-    \item \textbf{Neoclassical tearing mode (NTM) stability}: Following the La~Haye criterion \cite{lahaye2006}, the NTM stability metric is $\beta_N / \beta_{N,\text{NTM}} = 1.13$, marginally above the onset threshold. Active electron cyclotron current drive (ECCD) stabilization is required, consistent with ITER and SPARC planning.
+    \item \textbf{Neoclassical tearing mode (NTM) stability}: Following the La~Haye criterion \cite{lahaye2006}, the NTM stability metric is $\beta_N / \beta_{N,\text{NTM}} = 1.13$, marginally above the onset threshold. Active ECCD stabilization (10.9~MW, 22 $\times$ 0.5~MW gyrotrons at 328~GHz) is required; the high-frequency gyrotron technology (TRL~3) is comparable to SPARC's 250~GHz development program \cite{thumm2020}.
     \item \textbf{Edge safety factor}: $q_{95} = 3.1$, providing a 0.5 margin above the $q_{95} > 2.6$ kink stability threshold.
     \item \textbf{Greenwald density fraction}: $n/n_{\text{GW}} = 0.60$, providing 40\% margin against the density limit.
 \end{itemize}
@@ -281,7 +281,7 @@ Using the La~Haye criterion, the required driven current per surface is $I_{\tex
 \label{eq:gamma_cd}
 \end{equation}
 
-For the reference design, the total ECCD power required is 10.9~MW (11 gyrotrons at 1~MW each), distributed over two equatorial ports. The recirculating power penalty is 21.9~MW at 50\% gyrotron wall-plug efficiency, representing a 1.2\% reduction in net electric output. The ECCD system cost is estimated at \$44~M, consistent with ITER-grade 170~GHz gyrotron system costs \cite{poli2018}.
+For the reference design, the total ECCD power required at the plasma is 10.9~MW for stabilization of both the $q=3/2$ and $q=2$ surfaces. Because the on-axis toroidal field of 11.7~T gives a fundamental EC resonance frequency of 328~GHz, the gyrotron technology readiness level is TRL~3 (development program required)~\cite{thumm2020}. Assuming 0.5~MW per gyrotron (conservative for this frequency range), 22 units are required. With 68\% transmission efficiency (waveguide and mirror losses at 328~GHz), the launched power is 16.0~MW. At 40\% gyrotron wall-plug efficiency, the recirculating power penalty is 40.2~MW --- 2.3\% of the net electric output. The ECCD system cost is estimated at \$75~M (including gyrotrons, launchers, and auxiliary systems), distributed over three upper-port steerable launchers. The frequency and efficiency challenges are comparable to those facing SPARC (250~GHz gyrotron development) and are considered a manageable engineering risk within the project timeline.
 
 \subsection{Gyro-Bohm Heating System Requirements}
 
@@ -394,7 +394,9 @@ Helium fraction & 14.8 & \% \\
 TBR (LiPb) & 0.97 & --- \\
 TBR (HCPB) & 1.17 & --- \\
 ECCD power (NTM control) & 10.9 & MW \\
-ECCD gyrotrons & 11 & --- \\
+ECCD gyrotrons & 22 $\times$ 0.5~MW & 328~GHz \\
+ECCD recirculating & 40.2 & MW \\
+ECCD cost & \$75 & M \\
 TF ripple (16 coils) & 6.0 & \% \\
 Alpha ripple loss & 1.1 & \% \\
 Alpha ripple loss (mit.) & 0.3 & \% \\
@@ -497,7 +499,7 @@ The present design incorporates several physics refinements that were omitted fr
 
 \textbf{Tritium self-sufficiency.} The baseline LiPb blanket achieves TBR = 0.97. An HCPB blanket upgrade (800~mm Li$_4$SiO$_4$, 15\% $^6$Li, 20~mm Be) calibrated to published MCNP results yields TBR = 1.17, closing the fuel cycle.
 
-\textbf{NTM stabilization.} Active ECCD at the $q = 3/2$ and $q = 2$ surfaces requires 10.9~MW (11 gyrotrons, 2 ports, \$44~M), a routine engineering addition. The NTM stability metric of 1.13 in the unmitigated case is reduced to $< 1.0$ with ECCD.
+\textbf{NTM stabilization.} Active ECCD at the $q = 3/2$ and $q = 2$ surfaces requires 10.9~MW at the plasma (22 $\times$ 0.5~MW gyrotrons at 328~GHz, 3 upper-port launchers, \$75~M total system cost). The 328~GHz gyrotron technology is TRL~3 (development required), comparable to the 250~GHz program for SPARC. The 40.2~MW wall-plug power penalty represents 2.3\% of the net electric output --- a manageable recirculating power fraction. The NTM stability metric of 1.13 in the unmitigated case is reduced to $< 1.0$ with ECCD.
 
 \textbf{Gyro-Bohm confinement sensitivity.} A gyro-Bohm transport model calibrated to JET D-T data ($C_{\text{GB}} = 1.14$, 12.5\% error) gives $Q = 7.3$ with 751~MW of external heating. While the heating system at this scale is infeasible (1,501~MW wall-plug, 94 ports), the result bounds the design's performance under conservative transport assumptions and motivates installing 50--100~MW of auxiliary heating for startup and degraded-confinement margin.
 
@@ -540,7 +542,7 @@ We present a complete conceptual design of a tokamak fusion power plant that ach
     \item \textbf{ELM and disruption mitigation}: RMP coils suppress Type-I ELMs; shattered pellet injection provides disruption mitigation with 56\% predicted disruption probability.
     \item \textbf{Engineering feasibility}: All structural, thermal, and electromagnetic loads are within qualified limits with safety factors of 3--28$\times$.
     \item \textbf{Fuel self-sufficiency}: The baseline LiPb blanket achieves TBR = 0.97, below the self-sufficiency threshold. The HCPB blanket upgrade (800~mm pebble bed, 15\% $^6$Li, 20~mm Be) achieves TBR = 1.17 --- providing a 17\% tritium surplus and closing the fuel cycle without external sources.
-    \item \textbf{NTM stabilization}: Active ECCD stabilization at the $q = 3/2$ and $q = 2$ surfaces requires 10.9~MW (11 gyrotrons, 2 ports), a manageable engineering addition that adds 21.9~MW of recirculating power.
+    \item \textbf{NTM stabilization}: Active ECCD stabilization at the $q = 3/2$ and $q = 2$ surfaces requires 10.9~MW at the plasma (22 $\times$ 0.5~MW gyrotrons, 328~GHz, 3 ports, \$75~M). The 40.2~MW wall-plug power (2.3\% of $P_{\text{net}}$) is manageable; the 328~GHz gyrotron technology requires R\&D (TRL~3) but is comparable to SPARC's 250~GHz program.
     \item \textbf{Gyro-Bohm contingency}: Sizing a heating system for the gyro-Bohm operating point (751~MW) is infeasible (1,501~MW wall-plug, 94~ports required), bounding degraded confinement scenarios. A realistic 50--100~MW installed heating system provides startup, profile control, and degraded-confinement margin.
     \item \textbf{Control}: An AI-based plasma controller maintains stability and divertor detachment across a wide range of operating conditions.
     \item \textbf{Economics}: The cost per kilowatt is competitive with nuclear fission and declining with learning.
@@ -594,6 +596,10 @@ and implications for ITER,''
 \bibitem{poli2018} F.~M.~Poli \textit{et al.},
 ``Electron cyclotron current drive in ITER and DEMO,''
 \textit{Nucl. Fusion}, vol.~58, p.~016009, 2018.
+
+\bibitem{thumm2020} M.~Thumm \textit{et al.},
+``Gyrotrons for high-power millimeter-wave generation: Status and future,''
+\textit{IEEE Trans. Plasma Sci.}, vol.~48, p.~1438, 2020.
 
 \bibitem{abdou2021} M.~A.~Abdou \textit{et al.},
 ``Tritium breeding blankets for fusion reactors:
