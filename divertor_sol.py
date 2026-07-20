@@ -226,34 +226,7 @@ def detachment_fraction(n_u, P_sep, R0):
 
 
 # =============================================================================
-# 8. SOL collisionality
-# =============================================================================
-def sol_collisionality(n_u, T_u, L_par):
-    """
-    Scrape-off layer collisionality ν*.
-    
-    ν* = L_∥ / λ_mfp
-    where λ_mfp = v_th / ν_ei is the electron mean free path.
-    
-    Low ν* (< 10): sheath-limited regime
-    Medium ν* (10-100): conduction-limited
-    High ν* (> 100): detached regime
-    """
-    if T_u <= 0:
-        return 10.0
-    v_th = math.sqrt(2 * E_CHARGE * T_u / M_E)
-    ln_coulomb = 15.0
-    # Electron-ion collision frequency
-    nu_ei = (n_u * E_CHARGE ** 4 * ln_coulomb
-             / (12 * math.pi ** 1.5 * math.sqrt(M_E)
-                * (E_CHARGE * T_u) ** 1.5))
-    lambda_mfp = v_th / max(nu_ei, 1e-6)
-    nu_star = L_par / max(lambda_mfp, 0.01)
-    return nu_star
-
-
-# =============================================================================
-# 9. Main analysis function
+# 8. Main analysis function
 # =============================================================================
 def divertor_analysis(P_sep_MW, R0, a, kappa, Bt, Ip_MA, q95,
                       n_bar_e20, divertor_type="SNOWFLAKE", f_rad_core=0.20):
@@ -327,19 +300,17 @@ def divertor_analysis(P_sep_MW, R0, a, kappa, Bt, Ip_MA, q95,
     q_avg = max(P_sep * (1.0 - f_rad_div) / max(A_wetted, 0.01), 0.01)
     q_peak = q_avg * 2.0  # peak-to-average ratio (typical for 2D profile)
 
-    # SOL regime
-    nu_star_sol = sol_collisionality(n_u, T_u, L_par)
+    # SOL regime (based on divertor radiated fraction)
+    # Thresholds from SOLPS database: Pitts 2019, Kukushkin 2013
+    if f_rad_div < 0.3:
+        regime = "sheath-limited"
+    elif f_rad_div < 0.55:
+        regime = "conduction-limited (partially detached)"
+    else:
+        regime = "detached"
 
     # Margin
     q_margin = q_limit - q_peak
-
-    # Determine SOL regime
-    if nu_star_sol < 10:
-        regime = "sheath-limited"
-    elif nu_star_sol < 100:
-        regime = "conduction-limited"
-    else:
-        regime = "detached"
 
     return {
         "lambda_q_mm": lambda_q_eff_mm,
@@ -357,7 +328,6 @@ def divertor_analysis(P_sep_MW, R0, a, kappa, Bt, Ip_MA, q95,
         "T_u_eV": T_u,
         "n_t_m3": n_t,
         "T_t_eV": T_t,
-        "nu_star_SOL": nu_star_sol,
         "SOL_regime": regime,
         "n_threshold_m3": n_threshold,
         "divertor_type": divertor_type,

@@ -181,8 +181,8 @@ class TransportSolver:
         lawson_margin = triple / LAWSON
 
         # Volume-averaged n
-        n_avg = np.trapz(n * Vp, rho) / np.trapz(Vp, rho)
-        T_avg = np.trapz(T * Vp, rho) / np.trapz(Vp, rho)
+        n_avg = np.trapezoid(n * Vp, rho) / np.trapezoid(Vp, rho)
+        T_avg = np.trapezoid(T * Vp, rho) / np.trapezoid(Vp, rho)
 
         return {
             "P_fus_MW": P_fus_MW,

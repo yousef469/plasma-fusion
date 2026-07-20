@@ -182,7 +182,7 @@ PROFILE_PEAKING_FACTOR = 1.25
 # 4. Self-consistent power balance (with 1D radial profiles)
 # =============================================================================
 def solve_power_balance(R0, a, Bt, Ip_MA, kappa, eps, V, T_keV=15.0, n_fGW=0.60,
-                         alpha_n=0.2, alpha_T=0.8):
+                         alpha_n=0.2, alpha_T=0.8, H98_mult=1.0):
     """
     Self-consistent 0D power balance with 1D radial profile integration.
     Uses closed-form solution of:
@@ -211,7 +211,7 @@ def solve_power_balance(R0, a, Bt, Ip_MA, kappa, eps, V, T_keV=15.0, n_fGW=0.60,
     C_H98 = (0.0562 * Ip_MA ** 0.93 * Bt ** 0.15
              * (n_bar_e20 * 10.0) ** 0.41 * 2.5 ** 0.19
              * R0 ** 1.97 * eps ** 0.58 * kappa ** 0.78)
-    C_H98 = max(C_H98, 1e-12)
+    C_H98 = max(C_H98, 1e-12) * H98_mult
 
     # Stored thermal energy from profile integration
     W_MJ = profiles["W_MJ"]
@@ -683,17 +683,19 @@ def quick_eval(design_dict, divertor_type="ITER"):
     V = tokamak_volume(R0, a, kappa)
     S = plasma_surface_area(R0, a, kappa)
     eps = a / R0 if R0 > 0 else 0.3
-    T_keV = 15.0
+    T_keV = design_dict.get("T_keV", 15.0)
+    n_fGW = design_dict.get("n_fGW", 0.60)
+    H98_mult = design_dict.get("H98_mult", 1.0)
 
     # ── Power balance (H98 primary) ────────────────────────────────────────
-    pb = solve_power_balance(R0, a, Bt, Ip_MA, kappa, eps, V, T_keV=T_keV, n_fGW=0.60)
+    pb = solve_power_balance(R0, a, Bt, Ip_MA, kappa, eps, V, T_keV=T_keV, n_fGW=n_fGW, H98_mult=H98_mult)
     n_bar_e20 = pb["n_bar_e20"]
 
     # ── Power balance (gyro-Bohm cross-check) ──────────────────────────────
     try:
         gb_solver = TransportSolver(R0, a, kappa, Bt, Ip_MA)
         n_GW = Ip_MA / (math.pi * a ** 2)
-        gb = gb_solver.solve(n_GW, n_fGW=0.60, T_keV=T_keV)
+        gb = gb_solver.solve(n_GW, n_fGW=n_fGW, T_keV=T_keV)
     except Exception:
         gb = {"Q": 0.0, "P_fus_MW": 0.0, "P_loss_MW": 0.0, "P_ext_MW": 0.0,
               "tau_E_s": 0.0, "W_MJ": 0.0}
