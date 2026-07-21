@@ -28,7 +28,7 @@
 \maketitle
 
 \begin{abstract}
-We present an integrated conceptual design of a tokamak fusion power plant that achieves ignited, self-sustaining burn under conservative gyro-Bohm confinement. All physics models are derived from published, peer-reviewed literature and are executed as open-source code rather than spreadsheets. The plasma power balance is solved self-consistently with 1.5D profile integration and gyro-Bohm transport theory calibrated to JET D-T data ($C_{\rm GB} = 1.14$, 12.5\% RMS error), yielding a self-consistent equilibrium at $T = 17.0$~keV with $\tau_E = 0.59$~s and $P_{\rm fus} = 14.1$~GW. As a cross-check, the ITER H98(y,2) scaling gives $Q = 25.5$ with $\tau_E = 4.62$~s and $P_{\rm fus} = 11.4$~GW; both models converge to similar fusion power and net output despite an 8$\times$ difference in confinement time, because the transport equilibrium finds different operating temperatures. The design uses REBCO HTS toroidal field coils with a peak field of 22.8~T (55~K temperature margin), a double-null divertor with negative triangularity ($\delta = -0.30$) for enhanced detachment, and a FLiBe liquid blanket that absorbs approximately 80\% of neutron energy within 20~cm, reducing structural wall loading to $\sim$3~MW/m$^2$. The plasma operates at $\beta_N = 2.77$ (24\% margin to the no-wall MHD limit) with $q_{95} = 3.3$. Key output parameters include a major radius of 7.0~m, toroidal field of 13~T, fusion power of 14.1~GW thermal (7.63~GW electric net), and an estimated total project cost of \$35.34~billion (\$4,630/kW). The levelized cost of electricity is \$50/MWh (5.0\cent/kWh), competitive with onshore wind and natural gas combined cycle. Annual revenue of \$5.4~billion at \$90/MWh yields a 6.5-year simple payback period. The design is conservative: all dimensionless parameters ($\beta_N \leq 3.5$, $A \geq 4$, $B_{\rm peak} \leq 23$~T) are within validated experimental databases, and no extrapolation beyond established physics scaling is required. All source code is publicly available for independent verification and iteration.
+We present an integrated conceptual design of a tokamak fusion power plant that achieves ignited, self-sustaining burn under conservative gyro-Bohm confinement. All physics models are derived from published, peer-reviewed literature and are executed as open-source code rather than spreadsheets. The plasma power balance is solved self-consistently with 1.5D profile integration and gyro-Bohm transport theory calibrated to JET D-T data ($C_{\rm GB} = 1.14$, 12.5\% RMS error), yielding a self-consistent equilibrium at $T = 17.0$~keV with $\tau_E = 0.59$~s and $P_{\rm fus} = 14.1$~GW. As a cross-check, the ITER H98(y,2) scaling gives $Q = 25.5$ with $\tau_E = 4.62$~s and $P_{\rm fus} = 11.4$~GW; both models converge to similar fusion power and net output despite an 8$\times$ difference in confinement time, because the transport equilibrium finds different operating temperatures. The design uses REBCO HTS toroidal field coils with a peak field of 22.8~T (55~K temperature margin), a double-null divertor with negative triangularity ($\delta = -0.30$) for enhanced detachment, and a FLiBe liquid blanket that absorbs approximately 80\% of neutron energy within 20~cm, reducing structural wall loading to $\sim$3~MW/m$^2$. The plasma operates at $\beta_N = 2.77$ (24\% margin to the no-wall MHD limit) with $q_{95} = 3.3$. Key output parameters include a major radius of 7.0~m, toroidal field of 13~T, fusion power of 14.1~GW thermal (5.25~GW electric net), and an estimated total project cost of \$34.36~billion (\$6,545/kW). The levelized cost of electricity is \$77/MWh (7.7\cent/kWh), competitive with nuclear fission. Annual revenue of \$3.52~billion at \$90/MWh yields a 9.8-year simple payback period. The design is conservative: all dimensionless parameters ($\beta_N \leq 3.5$, $A \geq 4$, $B_{\rm peak} \leq 23$~T) are within validated experimental databases, and no extrapolation beyond established physics scaling is required. All source code is publicly available for independent verification and iteration.
 \end{abstract}
 
 \section{Introduction}
@@ -44,7 +44,7 @@ This work addresses that gap by presenting a fully open-source, integrated tokam
     \item All materials and manufacturing processes are qualified and available at TRL~8 or higher (with the exception of 170~GHz gyrotrons for NTM stabilization, which are TRL~9 and commercially available).
 \end{enumerate}
 
-The design philosophy is iterative, following the SpaceX approach: V1 established a conservative baseline, V2 tested aggressive compact configurations, and the present V3 converges on a stable, cost-effective design with all physics models operating within validated regimes. The result is a single 7.0~m major radius tokamak producing 7.63~GW of net electric power at \$4,630/kW --- competitive with nuclear fission and approaching fossil-fuel generation costs.
+The design philosophy is iterative, following the SpaceX approach: V1 established a conservative baseline, V2 tested aggressive compact configurations, and the present V3 converges on a stable, cost-effective design with all physics models operating within validated regimes. The result is a single 7.0~m major radius tokamak producing 5.25~GW of net electric power at \$6,545/kW --- competitive with nuclear fission.
 
 \section{Physics Basis}
 
@@ -297,16 +297,16 @@ The NTM stability metric of 1.13 indicates marginal instability above the onset 
 
 The thermal power of 14.1~GW is extracted by the helium-cooled HCPB blanket at 80~bar with 300$^\circ$C inlet and 500$^\circ$C outlet temperatures. The primary helium coolant is circulated by four-stage axial compressors consuming 22.8~MW.
 
-Heat is transferred through an intermediate heat exchanger to a reheat Rankine steam cycle. The steam generator produces superheated steam at 480$^\circ$C and 160~bar, driving a high-pressure turbine, moisture separator, reheater, and low-pressure turbine. With a 40$^\circ$C condenser, the net thermal efficiency is 38.0\%. Gross electrical output is 5,358~MW$_e$.
+Heat is transferred through an intermediate heat exchanger to a reheat Rankine steam cycle. The steam generator produces superheated steam at 480$^\circ$C and 160~bar, driving a high-pressure turbine, moisture separator, reheater, and low-pressure turbine. With a 40$^\circ$C condenser, the net thermal efficiency is 40.0\%. Gross electrical output is 5,653~MW$_e$.
 
-Recirculated power totals 598~MW$_e$: He circulators (22.8~MW), cryoplant (40~MW), cooling water pumps (80.4~MW), vacuum pumping (15~MW), tritium processing (25~MW), balance-of-plant auxiliaries (15~MW), ECCD for NTM stabilization (28.6~MW wall-plug), and blanket replacement power (371~MW for 14.1~GW thermal). Net electric output to the grid is 7.63~GW$_e$.
+Recirculated power totals 403~MW$_e$: blanket pumps (37~MW), cryoplant (30~MW), cooling water pumps (85~MW), vacuum pumping (5~MW), tritium processing (10~MW), balance-of-plant auxiliaries (15~MW), plasma control (158~MW), and ECCD for NTM stabilization (58~MW wall-plug). Net electric output to the grid is 5.25~GW$_e$.
 
 Waste heat of 8,747~MW$_t$ is rejected to wet mechanical-draft cooling towers at a water flow rate of 480,000~m$^3$/h. Makeup water requirements are approximately 9,600~m$^3$/h.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/fig_power_flow.png}
-\caption{Power flow diagram. Left: waterfall chart showing fusion power, gross electric (38\% efficiency), recirculated power, and net electric output (7.63~GW). Right: breakdown of recirculated power. Engineering gain $Q_{\text{eng}} = 12.8$.}
+\caption{Power flow diagram. Left: waterfall chart showing fusion power, gross electric (40\% efficiency), recirculated power, and net electric output (5.25~GW). Right: breakdown of recirculated power. Engineering gain $Q_{\text{eng}} = 13.0$.}
 \label{fig:power_flow}
 \end{figure}
 
@@ -340,7 +340,7 @@ Line-averaged density & 1.01 & $\times 10^{20}$ m$^{-3}$ \\
 \addlinespace
 \multicolumn{3}{l}{\textbf{Gyro-Bohm confinement (primary)}} \\
 Fusion power $P_{\text{fus}}$ & 14,100 & MW \\
-Net electric power & 7,630 & MW$_e$ \\
+Net electric power & 5,250 & MW$_e$ \\
 Confinement time $\tau_E$ & 0.59 & s \\
 Temperature $T$ & 17.0 & keV \\
 Magnetic gain $Q$ & $> 100$ (ignited) & --- \\
@@ -377,12 +377,12 @@ TF stored energy & 56.6 & GJ \\
 Thermal efficiency & 38.0 & \% \\
 \addlinespace
 \multicolumn{3}{l}{\textbf{Cost and economics}} \\
-Total project cost & \$35.34 & B \\
-Cost per kWe & \$4,630 & \$/kW \\
-LCOE & \$50 & \$/MWh \\
-Annual energy & 60.2 & TWh/yr \\
-Annual revenue (at \$90/MWh) & \$5.4 & B/yr \\
-Simple payback & 6.5 & years \\
+Total project cost & \$34.36 & B \\
+Cost per kWe & \$6,545 & \$/kW \\
+LCOE & \$77 & \$/MWh \\
+Annual energy & 39.1 & TWh/yr \\
+Annual revenue (at \$90/MWh) & \$3.52 & B/yr \\
+Simple payback & 9.8 & years \\
 Plasma volume & 748 & m$^3$ \\
 \bottomrule
 \end{tabular}
@@ -445,7 +445,7 @@ $Q$ & 10 & 2--11 & 25--30 & $> 100$ (GB) / 25.5 (H98) \\
 $R_0$ (m) & 6.2 & 1.85 & 8.0--9.0 & 7.0 \\
 $B_0$ (T) & 5.3 & 12.2 & 5.5--6.0 & 13.0 \\
 $P_{\text{fus}}$ (MW) & 500 & 50--140 & 2,000 & 14,100 (GB) / 11,400 (H98) \\
-$P_{\text{net}}$ (MW$_e$) & 0 (test) & $\sim$0 & $\sim$500 & 7,630 \\
+$P_{\text{net}}$ (MW$_e$) & 0 (test) & $\sim$0 & $\sim$500 & 5,250 \\
 TF conductor & Nb$_3$Sn+NbTi & REBCO & Nb$_3$Sn & REBCO \\
 Cost (\$/kW) & N/A & $\sim$\$200M/MW & $\sim$\$15k/kW & \$4,630 \\
 Confinement model & H98 & TRANSP+TGLF & H98+ASTRA & Gyro-Bohm (primary) \\
@@ -481,7 +481,7 @@ The V3 design converges on $R_0 = 7.0$~m, $A = 5.8$, $\kappa = 3.0$, $\delta = -
 
 \subsection{Gyro-Bohm vs. H98 Model Convergence}
 
-The 8$\times$ disagreement between gyro-Bohm and H98 confinement times (0.59~s vs.~4.62~s) is the single largest physics uncertainty in this design. However, the self-consistent power balance partially resolves this discrepancy: at the same input density, the equilibrium solver finds different temperatures (17.0~keV vs.~15.0~keV) such that $P_{\text{fus}}$ differs by only 24\% (14.1~GW vs.~11.4~GW). The net electric output difference is smaller still (7.63~GW vs.~6.28~GW) because the balance of plant efficiency and recirculated power fraction are similar.
+The 8$\times$ disagreement between gyro-Bohm and H98 confinement times (0.59~s vs.~4.62~s) is the single largest physics uncertainty in this design. However, the self-consistent power balance partially resolves this discrepancy: at the same input density, the equilibrium solver finds different temperatures (17.0~keV vs.~15.0~keV) such that $P_{\text{fus}}$ differs by only 24\% (14.1~GW vs.~11.4~GW). The net electric output difference is smaller still (5.25~GW vs.~4.30~GW) because the balance of plant efficiency and recirculated power fraction are similar.
 
 The gyro-Bohm model is preferred for this design because: (i) it is derived from first-principles turbulent transport theory rather than empirical regression; (ii) the ITER H98(y,2) database has limited representation of high-$\kappa$, high-$\delta$, negative-triangularity plasmas; and (iii) gyro-Bohm is the more conservative model, so meeting economic targets under GB scaling ensures robustness.
 
@@ -527,10 +527,10 @@ The V3 design represents the converged result of three iterative design cycles:
 \begin{enumerate}[nosep]
     \item \textbf{V1 -- Conservative HTS prototype} ($R_0 \approx 12$~m, $B_0 = 13$~T, $\sim$2~GW): Established the physics basis, validated the open-source code framework, and demonstrated that gyro-Bohm confinement is adequate for ignition at $R_0 > 10$~m.
     \item \textbf{V2 -- Aggressive compact optimization} ($R_0 = 9.5$~m, $A > 16$, $\beta_N = 5.06$): Tested the limits of high-aspect-ratio configurations. Abandoned due to $\beta_N$ exceeding the no-wall MHD limit and H98 extrapolation penalty degrading $Q$.
-    \item \textbf{V3 -- Stable, cost-effective design} ($R_0 = 7.0$~m, $A = 5.8$, $\beta_N = 2.77$, 7.63~GW): Converges on a design where all physics models operate within validated ranges. Gyro-Bohm gives ignited operation. Cost is \$4,630/kW with LCOE of \$50/MWh.
+    \item \textbf{V3 -- Stable, cost-effective design} ($R_0 = 7.0$~m, $A = 5.8$, $\beta_N = 2.77$, 5.25~GW): Converges on a design where all physics models operate within validated ranges. Gyro-Bohm gives ignited operation. Cost is \$6,545/kW with LCOE of \$77/MWh.
 \end{enumerate}
 
-The path to commercialization follows from V3: a single 7.63~GW plant provides 60.2~TWh/yr (115\% of New York City's annual electricity consumption) and generates \$5.4~B/yr in revenue at \$90/MWh, paying back the \$35.34~B construction cost in 6.5 years. As HTS manufacturing scales and costs fall from \$130/GJ to \$60/GJ, the cost per kilowatt drops to \$3,686 --- competitive with natural gas combined cycle without carbon pricing.
+The path to commercialization follows from V3: a single 5.25~GW plant provides 39.1~TWh/yr (75\% of New York City's annual electricity consumption) and generates \$3.52~B/yr in revenue at \$90/MWh, paying back the \$34.36~B construction cost in 9.8 years. As HTS manufacturing scales and costs fall from \$130/GJ to \$60/GJ, the cost per kilowatt drops to \$5,200.
 
 \section{Conclusion}
 
@@ -544,7 +544,7 @@ We present an integrated conceptual design of a tokamak fusion power plant that 
     \item \textbf{Divertor}: Peak heat flux of 34.5~MW/m$^2$ with double-null negative triangularity geometry, 43\% below the 60~MW/m$^2$ limit. Detachment broadens $\lambda_q$ from 0.30~mm to 0.95~mm.
     \item \textbf{Neutron wall load}: 12.3~MW/m$^2$ at the plasma-facing surface. FLiBe liquid blanket absorbs 80\% in 20~cm, reducing structural loading to $\sim$3~MW/m$^2$ with 5--7 year blanket replacement.
     \item \textbf{Tritium breeding}: HCPB blanket achieves TBR = 1.175, providing 570~g/day tritium surplus.
-    \item \textbf{Economics}: Total project cost \$35.34~B (\$4,630/kW), LCOE \$50/MWh, annual revenue \$5.4~B/yr, simple payback 6.5~years. One plant powers 60.2~TWh/yr (115\% of NYC).
+    \item \textbf{Economics}: Total project cost \$34.36~B (\$6,545/kW), LCOE \$77/MWh, annual revenue \$3.52~B/yr, simple payback 9.8~years. One plant powers 39.1~TWh/yr (75\% of NYC).
 \end{enumerate}
 
 All source code is publicly available for independent verification. This design shows that a high-gain, cost-competitive tokamak power plant is calculable from first principles using existing physics models --- and that gyro-Bohm confinement, while 8$\times$ more conservative than H98, still supports ignited, economically viable fusion power.
