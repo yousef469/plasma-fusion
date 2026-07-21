@@ -97,6 +97,13 @@ P_{\text{fus}} = \iiint \left(\frac{n(r)}{2}\right)^2 \langle \sigma v \rangle(T
 
 where $E_{\text{fus}} = 17.6$~MeV. The profile peaking factor emerges naturally as $f_{\text{profile}} = 1.46$, eliminating ad-hoc multipliers.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/fig_radial_profiles.png}
+\caption{Radial profiles of density, temperature, fusion power density, and ion heating power density for the V3 design. The parabolic profiles use ITER-standard shape parameters ($\alpha_n = 0.2$, $\alpha_T = 0.8$), giving a peaking factor $f_{\text{profile}} = 1.46$.}
+\label{fig:profiles}
+\end{figure}
+
 \subsection{Gyro-Bohm Self-Consistent Equilibrium}
 
 The gyro-Bohm confinement model is the primary basis for all design parameters. At the reference operating point ($n/n_{\text{GW}} = 0.70$, $n = 1.01 \times 10^{20}$~m$^{-3}$), the binary search solver converges to a self-consistent equilibrium:
@@ -155,6 +162,13 @@ f_{\text{bs}} = C_{\text{bs}} \sqrt{\varepsilon} \;
 
 where $\varepsilon = a/R_0$ is the inverse aspect ratio. For the reference design, $\varepsilon = 0.17$, $\beta_p = 0.87$, yielding $f_{\text{bs}} = 18.5\%$. The central solenoid (Nb$_3$Sn, 15~T peak) provides the remaining 81.5\% of plasma current inductively, producing a burn pulse of approximately 1.5~hours.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_plasma_cross_section.png}
+\caption{Plasma cross-section for the V3 design ($R_0 = 7.0$~m, $a = 1.2$~m, $\kappa = 3.0$, $\delta = -0.30$). The negative triangularity enhances divertor detachment by increasing connection length and flux expansion.}
+\label{fig:cross_section}
+\end{figure}
+
 \subsection{Impurity Radiation and Core Power Loss}
 
 Controlled argon seeding ($f_{\text{Ar}} = 5 \times 10^{-5}$) and intrinsic tungsten ($f_{\text{W}} = 1 \times 10^{-5}$) contribute to core radiative power loss:
@@ -166,9 +180,23 @@ P_{\text{rad}} = n_e \sum_j n_j L_z^{(j)}(T_e) V
 
 At $T_e = 17.0$~keV, argon ($Z = 18$) is fully stripped with $L_z^{\text{Ar}} \approx 1 \times 10^{-31}$~W~m$^3$, and tungsten ($Z = 74$) has $L_z^{\text{W}} \approx 3 \times 10^{-31}$~W~m$^3$. The total core radiation is $P_{\text{rad}} = 230$~MW, representing 8.2\% of the alpha heating power. The power crossing the separatrix is $P_{\text{sep}} = 2.59$~GW.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_power_balance.png}
+\caption{Power balance waterfall for the V3 gyro-Bohm equilibrium. Fusion power of 14.1~GW produces 2.82~GW of alpha heating. Core radiation removes 230~MW, leaving 2.59~GW crossing the separatrix. Divertor radiation and conduction split the remaining power.}
+\label{fig:power_balance}
+\end{figure}
+
 \subsection{Helium Ash Buildup and Exhaust}
 
 The equilibrium helium density for $P_{\text{fus}} = 14.1$~GW with $\tau_p = 5.0$~s is $n_{\text{He}} = 3.41 \times 10^{19}$~m$^{-3}$, corresponding to a helium fraction $f_{\text{He}} = n_{\text{He}} / n_D = 16.9\%$. This is below the 20\% fraction at which alpha particle accumulation begins to significantly dilute the fusion fuel.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_tokamak_layout.png}
+\caption{Poloidal cross-section of the V3 design showing the major components: central solenoid (CS), toroidal field coils (TF), poloidal field coils (PF1--PF6), plasma, blanket, shield, vacuum vessel (VV), and double-null divertor targets. Dimensions are in meters.}
+\label{fig:layout}
+\end{figure}
 
 \section{Engineering Integration}
 
@@ -225,7 +253,21 @@ q_{\text{peak}} = \frac{P_{\text{sep}}(1 - f_{\text{rad,div}})}{A_{\text{wetted}
 
 This is below the 60~MW/m$^2$ snowflake divertor limit, providing a margin of 25.5~MW/m$^2$. The wetted area $A_{\text{wetted}} = 2\pi R_{\text{div}} \lambda_{q,\text{eff}} f_{\text{exp}} / \sin\theta$ incorporates a 7.5$\times$ flux expansion from the negative $\delta$ double-null geometry and target inclination ($\theta = 2^\circ$).
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/fig_divertor.png}
+\caption{Divertor heat flux analysis. Left: peak heat flux by divertor type. Right: parallel heat flux profiles at the target. The double-null negative triangularity design achieves $q_{\text{peak}} = 34.5$~MW/m$^2$, 43\% below the 60~MW/m$^2$ limit.}
+\label{fig:divertor}
+\end{figure}
+
 \subsection{Neutron Wall Load and Blanket}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/fig_tbr_sensitivity.png}
+\caption{HCPB blanket tritium breeding ratio as a function of $^6$Li enrichment. At 15\% enrichment, TBR = 1.175, providing a 17.5\% tritium surplus. Natural lithium (7.5\% $^6$Li) achieves TBR = 1.05, meeting the self-sufficiency threshold.}
+\label{fig:tbr}
+\end{figure}
 
 The neutron wall load at the first wall is 12.3~MW/m$^2$. The FLiBe (Li$_2$BeF$_4$) liquid blanket absorbs approximately 80\% of neutron energy within the first 20~cm of penetration, reducing the structural wall loading to approximately 3~MW/m$^2$. The blanket is replaced every 5--7 years, adding approximately \$84~M per year to operations and maintenance costs.
 
@@ -242,6 +284,13 @@ With 92\% coverage, the HCPB blanket achieves TBR = 1.175 --- providing a 17.5\%
 
 \subsection{Neoclassical Tearing Mode Stabilization}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/fig_eccd.png}
+\caption{ECCD system design for NTM stabilization. Left: power budget from plasma to wall-plug. Center: system specifications (12~MW at 170~GHz, 11 gyrotrons, TRL~9). Right: comparison with ITER and SPARC ECCD systems.}
+\label{fig:eccd}
+\end{figure}
+
 The NTM stability metric of 1.13 indicates marginal instability above the onset threshold, requiring active stabilization via ECCD at the $q = 3/2$ and $q = 2$ surfaces~\cite{lahaye2006}. The total ECCD power required at the plasma is 12~MW. Because the on-axis toroidal field of 13~T gives a fundamental EC resonance frequency of 170~GHz, commercial gyrotron technology is directly applicable (TRL~9). Eleven 1.5~MW gyrotrons (170~GHz) are required, each available from commercial suppliers (Thales, IAP Nizhny). The system is distributed over three upper-port steerable launchers with an estimated cost of \$150~M.
 
 \subsection{Balance of Plant}
@@ -253,6 +302,13 @@ Heat is transferred through an intermediate heat exchanger to a reheat Rankine s
 Recirculated power totals 598~MW$_e$: He circulators (22.8~MW), cryoplant (40~MW), cooling water pumps (80.4~MW), vacuum pumping (15~MW), tritium processing (25~MW), balance-of-plant auxiliaries (15~MW), ECCD for NTM stabilization (28.6~MW wall-plug), and blanket replacement power (371~MW for 14.1~GW thermal). Net electric output to the grid is 7.63~GW$_e$.
 
 Waste heat of 8,747~MW$_t$ is rejected to wet mechanical-draft cooling towers at a water flow rate of 480,000~m$^3$/h. Makeup water requirements are approximately 9,600~m$^3$/h.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_power_flow.png}
+\caption{Power flow diagram. Left: waterfall chart showing fusion power, gross electric (38\% efficiency), recirculated power, and net electric output (7.63~GW). Right: breakdown of recirculated power. Engineering gain $Q_{\text{eng}} = 12.8$.}
+\label{fig:power_flow}
+\end{figure}
 
 \section{AI Plasma Controller}
 
@@ -350,6 +406,13 @@ All critical subsystems operate with substantial margins:
 
 \subsection{Sensitivity Analysis}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_cost.png}
+\caption{V3 cost breakdown. The total project cost is \$35.34~B (\$4,630/kW) with the HTS TF coils as the largest single cost component at 32\% of total.}
+\label{fig:cost}
+\end{figure}
+
 The design is economically robust across a range of parameters. The HTS conductor cost learning curve --- projected to fall from \$130/GJ to \$60/GJ as manufacturing scales --- reduces the cost per kilowatt from \$4,630 to \$3,686. Sensitivity scans show:
 
 \begin{itemize}[nosep]
@@ -360,6 +423,13 @@ The design is economically robust across a range of parameters. The HTS conducto
 \end{itemize}
 
 Monte Carlo analysis with H98 uncertainty $\mathcal{N}(1.0, 0.1)$ and density fraction uncertainty $\mathcal{N}(0.70, 0.05)$ yields: P50 $Q = 25.5$, 90\% confidence interval for external heating 0--458~MW. The gyro-Bohm operating point is ignited with zero external heating across all samples.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_sensitivity.png}
+\caption{Sensitivity analysis showing the impact of confinement multiplier, density fraction, and toroidal field on fusion gain $Q$. The baseline gyro-Bohm $Q$ is maintained across all variations.}
+\label{fig:sensitivity}
+\end{figure}
 
 \section{Comparison with Existing Designs}
 
@@ -401,6 +471,13 @@ The V3 design converges on $R_0 = 7.0$~m, $A = 5.8$, $\kappa = 3.0$, $\delta = -
     \item \textbf{MHD stability}: $\beta_N = 2.77$ is 24\% below the no-wall limit of 3.67, providing robust stability without reliance on wall stabilization.
     \item \textbf{Divertor compatibility}: The 34.5~MW/m$^2$ peak heat flux is 43\% below the 60~MW/m$^2$ limit, enabled by negative triangularity and double-null geometry.
 \end{enumerate}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/fig_mhd_stability.png}
+\caption{MHD stability limits and margins for the V3 design. Left: $\beta_N$ relative to no-wall, wall-stabilized, and NTM onset thresholds. Right: engineering margins for key stability and operational limits.}
+\label{fig:mhd}
+\end{figure}
 
 \subsection{Gyro-Bohm vs. H98 Model Convergence}
 
