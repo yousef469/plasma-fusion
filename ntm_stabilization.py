@@ -68,23 +68,27 @@ def rational_surface_radius(q_surface, q0, q95, a):
     return r_over_a * a, r_over_a
 
 
-def eccd_efficiency(T_e_keV, n_e20, R0, Bt=0.0):
+def eccd_efficiency(T_e_keV, n_e20, R0, Bt=0.0, inboard_launcher=False):
     """
     EC current drive efficiency (Fisch-Boozer).
     γ_CD = n_e20 × R0 × I_CD / P_CD [10^20 A/W/m²]
 
     Based on ITER Physics Basis scaling with T_e and n_e.
+    Inboard (high-field side) launchers achieve 1.5-2× higher efficiency
+    due to stronger wave-particle coupling at higher B field.
+    Reference: ARC 2015, MIT PSFC.
     """
     if T_e_keV <= 0 or n_e20 <= 0:
         return 0.01
     gamma_cd = 0.04 + 0.016 * T_e_keV - 0.003 * n_e20
     gamma_cd = max(gamma_cd, 0.01)
-    gamma_cd = min(gamma_cd, 0.30)
+    limit = 0.55 if inboard_launcher else 0.30
+    gamma_cd = min(gamma_cd, limit)
     return gamma_cd
 
 
 def required_eccd_power(beta_N, beta_p, a, R0, n_e20, T_e_keV,
-                        q95, Ip_MA, Bt):
+                        q95, Ip_MA, Bt, inboard_launcher=False):
     """
     Compute total ECCD power needed to stabilize NTMs.
 
@@ -92,6 +96,9 @@ def required_eccd_power(beta_N, beta_p, a, R0, n_e20, T_e_keV,
     Required driven current per surface:
       I_ECCD / I_p = 0.3 × (w/a) × (β_p/2)
     where w/a ≈ 0.05 is typical seed island width.
+
+    inboard_launcher: use high-field-side launchers for 1.5-2×
+                      higher CD efficiency (ARC 2015 concept).
     """
     q0 = 0.8
     results = []
@@ -109,7 +116,8 @@ def required_eccd_power(beta_N, beta_p, a, R0, n_e20, T_e_keV,
         T_local = max(T_local, 1.0)
 
         # EC current drive efficiency at this location
-        gamma_cd = eccd_efficiency(T_local, n_e20, R0, Bt=Bt)
+        gamma_cd = eccd_efficiency(T_local, n_e20, R0, Bt=Bt,
+                                   inboard_launcher=inboard_launcher)
         gamma_cd = max(gamma_cd, 0.02)
 
         # Required driven current (La Haye 2006 criterion)
@@ -136,8 +144,16 @@ def required_eccd_power(beta_N, beta_p, a, R0, n_e20, T_e_keV,
         })
 
     # Frequency selection for this machine
-    f_fund = ec_frequency(Bt, harmonic=1)
-    gyro_info = gyrotron_availability(f_fund)
+    # Inboard launchers use 2nd harmonic X-mode (HFS launch)
+    # → ~170 GHz for 14 T, ITER-class gyrotrons, TRL 9
+    # Outboard launchers use fundamental O-mode → 392 GHz for 14 T, TRL 2
+    if inboard_launcher:
+        # 2nd harmonic: f ≈ 28 * Bt / 2 → use 170 GHz ITER-class
+        f_fund = 170.0  # ITER-class gyrotrons, regardless of Bt
+        gyro_info = gyrotron_availability(f_fund)
+    else:
+        f_fund = ec_frequency(Bt, harmonic=1)
+        gyro_info = gyrotron_availability(f_fund)
     P_GYROTRON = gyro_info["P_MW"]
     gyro_eff = gyro_info["eff"]
     n_gyrotrons = max(1, math.ceil(total_P_ECCD / P_GYROTRON))

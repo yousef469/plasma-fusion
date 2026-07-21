@@ -229,7 +229,8 @@ def detachment_fraction(n_u, P_sep, R0):
 # 8. Main analysis function
 # =============================================================================
 def divertor_analysis(P_sep_MW, R0, a, kappa, Bt, Ip_MA, q95,
-                      n_bar_e20, divertor_type="SNOWFLAKE", f_rad_core=0.20):
+                      n_bar_e20, divertor_type="SNOWFLAKE", f_rad_core=0.20,
+                      double_null=False, negative_delta=False):
     """
     Complete SOL/divertor analysis for the reference design.
     
@@ -241,6 +242,10 @@ def divertor_analysis(P_sep_MW, R0, a, kappa, Bt, Ip_MA, q95,
     q_limit = div["q_limit"]
     f_rad_div = div["f_rad_div"]
     theta_deg = div["theta_deg"]
+
+    # Double-null: split P_sep across upper + lower divertor
+    if double_null:
+        P_sep_MW = P_sep_MW / 2.0
 
     # Poloidal field at outer midplane
     Bp = poloidal_field(R0, a, kappa, Ip_MA)
@@ -261,6 +266,11 @@ def divertor_analysis(P_sep_MW, R0, a, kappa, Bt, Ip_MA, q95,
         f_broaden = 1.0 + 2.0 * f_rad_div / 0.5  # 1-3× during transition
 
     lambda_q_eff_mm = lambda_q_mm * min(f_broaden, 5.0)
+
+    # Negative triangularity broadens λ_q by ~30-50% (DIII-D experiments)
+    if negative_delta:
+        lambda_q_eff_mm *= 1.4
+
     lambda_q = lambda_q_eff_mm / 1000.0
 
     # Power into SOL
@@ -315,7 +325,8 @@ def divertor_analysis(P_sep_MW, R0, a, kappa, Bt, Ip_MA, q95,
     return {
         "lambda_q_mm": lambda_q_eff_mm,
         "lambda_q_raw_mm": lambda_q_mm,
-        "P_sep_MW": P_sep,
+        "P_sep_MW": P_sep * (2.0 if double_null else 1.0),
+        "P_sep_per_divertor_MW": P_sep,
         "f_exp": f_exp,
         "f_rad_div": f_rad_div,
         "Bp_T": Bp,
@@ -331,6 +342,8 @@ def divertor_analysis(P_sep_MW, R0, a, kappa, Bt, Ip_MA, q95,
         "SOL_regime": regime,
         "n_threshold_m3": n_threshold,
         "divertor_type": divertor_type,
+        "double_null": double_null,
+        "negative_delta": negative_delta,
     }
 
 

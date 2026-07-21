@@ -29,9 +29,10 @@ from mhd_stability import full_stability_analysis
 from divertor_sol import divertor_analysis
 from tbr_model import hcpb_tbr, li6_sensitivity
 
-D = {"R0": 12.08, "a": 0.96, "B0": 11.7, "Ip": 10600.0,
-     "elongation": 2.71, "triangularity_upper": 0.3,
-     "triangularity_lower": 0.3, "q95": 3.1}
+D = {"R0": 7.0, "a": 1.2, "B0": 13.0, "Ip": 19100.0,
+     "elongation": 3.0, "triangularity_upper": -0.30,
+     "triangularity_lower": -0.30, "q95": 3.3,
+     "n_fGW": 0.70, "H98_mult": 1.0}
 
 
 def fig_radial_profiles(save=True):
@@ -95,9 +96,9 @@ def fig_radial_profiles(save=True):
 
 
 def fig_mhd_stability(save=True):
-    eng = quick_eval(D, divertor_type='SNOWFLAKE')
+    eng = quick_eval(D, divertor_type='DOUBLE_NULL')
     r = full_stability_analysis(
-        D["R0"], D["a"], D["elongation"], 0.3, D["B0"],
+        D["R0"], D["a"], D["elongation"], D["triangularity_upper"], D["B0"],
         D["Ip"] / 1000, eng["l_i"], D["q95"],
         eng["n_bar_e20"], eng["beta_N"], eng["T_ped"],
     )
@@ -167,9 +168,10 @@ def fig_mhd_stability(save=True):
 
 
 def fig_divertor_heat_flux(save=True):
-    P_sep = 1095.0 * (1.0 - 0.21)
-    types = ["ITER", "X_DIVERTOR", "SNOWFLAKE", "LIQUID_LI"]
-    labels = ["ITER-grade", "X-divertor", "Snowflake", "Liquid Li divertor"]
+    eng = quick_eval(D, divertor_type='DOUBLE_NULL')
+    P_sep = eng.get("P_sep_MW", D["R0"] * 100)
+    types = ["ITER", "X_DIVERTOR", "DOUBLE_NULL", "LIQUID_LI"]
+    labels = ["ITER-grade", "X-divertor", "Double-null ($\\delta<0$)", "Liquid Li divertor"]
     colors = ["#e74c3c", "#f39c12", "#27ae60", "#3498db"]
 
     data = []
@@ -177,7 +179,7 @@ def fig_divertor_heat_flux(save=True):
         try:
             r = divertor_analysis(P_sep, D["R0"], D["a"], D["elongation"],
                                   D["B0"], D["Ip"] / 1000, D["q95"],
-                                  2.20, divertor_type=t, f_rad_core=0.21)
+                                  eng.get("n_bar_e20", 1.0), divertor_type=t, f_rad_core=0.082)
             data.append(r)
         except:
             data.append(None)
@@ -232,23 +234,23 @@ def fig_divertor_heat_flux(save=True):
 
 
 def fig_power_balance(save=True):
-    P_fus = 5475.0
-    P_alpha = 5475.0 / 5
-    P_rad_core = 230.0
-    P_rad_div = 865.0 * 0.65
-    P_cond = 865.0 * 0.35
-    P_ext = 0.0
-    P_aux = 30.0
+    eng = quick_eval(D, divertor_type='DOUBLE_NULL')
+    P_fus = eng["P_fusion_MW"]
+    P_alpha = P_fus / 5
+    P_rad_core = eng.get("P_rad_core_MW", 230.0)
+    P_sep = eng.get("P_sep_MW", P_alpha * 0.8)
+    P_rad_div = P_sep * 0.65
+    P_cond = P_sep * 0.35
 
     categories = [
-        "Fusion power\n$P_{\\mathrm{fus}} = 5,475$ MW",
-        "Alpha heating\n$P_\\alpha = 1,095$ MW",
-        "Core radiation\n$P_{\\mathrm{rad}} = 230$ MW",
-        "Power to SOL\n$P_{\\mathrm{sep}} = 865$ MW",
-        "Divertor radiation\n$P_{\\mathrm{rad,div}} = 562$ MW",
-        "Divertor conduction\n$P_{\\mathrm{cond}} = 303$ MW",
+        f"Fusion power\n$P_{{\\mathrm{{fus}}}} = {P_fus:.0f}$ MW",
+        f"Alpha heating\n$P_\\alpha = {P_alpha:.0f}$ MW",
+        f"Core radiation\n$P_{{\\mathrm{{rad}}}} = {P_rad_core:.0f}$ MW",
+        f"Power to SOL\n$P_{{\\mathrm{{sep}}}} = {P_sep:.0f}$ MW",
+        "Divertor radiation\n$P_{\\mathrm{rad,div}}$",
+        "Divertor conduction\n$P_{\\mathrm{cond}}$",
     ]
-    values = [P_fus, P_alpha, P_rad_core, P_sep := 865.0, P_rad_div, P_cond]
+    values = [P_fus, P_alpha, P_rad_core, P_sep, P_rad_div, P_cond]
 
     fig, ax = plt.subplots(figsize=(10, 5))
     colors_b = ["#3498db", "#2e86c1", "#e74c3c", "#f39c12", "#27ae60", "#1abc9c"]
@@ -271,63 +273,57 @@ def fig_power_balance(save=True):
 
 
 def fig_cost_breakdown(save=True):
-    r = quick_eval(D, "SNOWFLAKE")
-    # Map engine costs to chart categories
-    C_TF = r["cost_TF_coils_MS"]
-    C_PF = r["cost_PF_coils_MS"]
-    C_PF_CS = C_PF + 500  # combine PF + CS (CS ~$500M)
-    C_blanket = r["cost_blanket_MS"]
-    C_bop = r["cost_turbine_MS"]
-    C_cool = r["cost_cooling_MS"]
-    C_trit = r["cost_tritium_plant_MS"]
-    C_site = r["cost_site_MS"]
-    C_IC = r["cost_IC_MS"]
-    C_aux = r["cost_aux_MS"]
-    base = C_TF + C_PF_CS + C_blanket + C_bop + C_cool + C_trit + C_site + C_IC + C_aux
-    contingency = base * 0.15
-
+    r = quick_eval(D, "DOUBLE_NULL")
     costs = {
-        "TF coils (Nb$_3$Sn)": round(C_TF),
-        "PF + CS coils (NbTi)": round(C_PF),
-        "Blanket (HCPB)": round(C_blanket),
-        "Balance of plant": round(C_bop),
-        "Cooling systems": round(C_cool),
-        "Tritium plant": round(C_trit),
-        "Site + assembly": round(C_site),
-        "I&C + controls": round(C_IC),
-        "Heating + CD": round(max(C_aux, 1)),
-        "Contingency + indirect": round(contingency),
+        "TF coils (HTS REBCO)": round(r["cost_TF_coils_MS"]),
+        "PF + CS coils": round(r["cost_PF_coils_MS"] + 1000),
+        "Blanket": round(r["cost_blanket_MS"]),
+        "BOP": round(r["cost_turbine_MS"]),
+        "Cooling": round(r["cost_cooling_MS"]),
+        "Tritium plant": round(r["cost_tritium_plant_MS"]),
+        "Site": round(r["cost_site_MS"]),
+        "I&C": round(r["cost_IC_MS"]),
+        "Contingency": 0,
     }
-    total = sum(costs.values())
+    base = sum(costs.values())
+    P_net = r["P_net_electric_MW"]
+    costs["Contingency"] = round(base * 0.15)
+    total = base * 1.15
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 5), gridspec_kw={"width_ratios": [1.2, 1]})
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5.5),
+                                    gridspec_kw={"width_ratios": [1.2, 1]})
 
-    labels = list(costs.keys())
-    values = list(costs.values())
-    explode = [0.03] * len(labels)
-    colors_pie = plt.cm.Set3(np.linspace(0, 1, len(labels)))
-    wedges, texts, autotexts = ax1.pie(
-        values, labels=None, autopct="%1.1f%%",
-        startangle=90, explode=explode, colors=colors_pie,
-        pctdistance=0.85, wedgeprops={"edgecolor": "white", "lw": 0.5}
-    )
-    for t in autotexts:
-        t.set_fontsize(7)
-    ax1.set_title(f"Total: ${total / 1000:.1f}B", fontsize=12)
+    def draw_pie(ax, cost_dict, title, total, pnet):
+        labels = list(cost_dict.keys())
+        values = list(cost_dict.values())
+        colors = plt.cm.Set3(np.linspace(0, 1, len(labels)))
+        wedges, texts, autotexts = ax.pie(
+            values, labels=None, autopct="%1.1f%%",
+            startangle=90, explode=[0.03]*len(labels), colors=colors,
+            pctdistance=0.85, wedgeprops={"edgecolor": "white", "lw": 0.5}
+        )
+        for t in autotexts:
+            t.set_fontsize(7)
+        ax.set_title(f"Total: ${total/1000:.2f}B", fontsize=11)
 
-    ax2.axis("off")
-    sorted_idx = np.argsort(values)[::-1]
-    y = 0.95
-    for i in sorted_idx:
-        ax2.text(0, y, f"  {labels[i]}", transform=ax2.transAxes,
-                 fontsize=8, verticalalignment="top")
-        ax2.text(1, y, f"${values[i]:,}M", transform=ax2.transAxes,
-                 fontsize=8, verticalalignment="top", ha="right")
-        y -= 0.075
-    ax2.set_title("Cost Breakdown", fontsize=12, pad=10)
+    def draw_table(ax, cost_dict, title, pnet, total):
+        ax.axis("off")
+        sorted_idx = np.argsort(list(cost_dict.values()))[::-1]
+        y = 0.92
+        for i in sorted_idx:
+            k = list(cost_dict.keys())[i]
+            v = list(cost_dict.values())[i]
+            ax.text(0, y, f"  {k}", transform=ax.transAxes, fontsize=8, va="top")
+            ax.text(1, y, f"${v:,}M", transform=ax.transAxes, fontsize=8, va="top", ha="right")
+            y -= 0.085
+        ax.text(0, y-0.02, f"  ${total*1000/pnet:.0f}/kW$_e$", transform=ax.transAxes,
+                fontsize=9, va="top", fontweight="bold")
+        ax.set_title(title, fontsize=11, pad=10)
 
-    P_net = r.get("P_net_electric_MW", 1762)
-    fig.suptitle(f"Total Project Cost: ${total / 1000:.2f}B (${total * 1000 / max(P_net, 1):.0f}/kW$_e$)", fontsize=13)
+    draw_pie(ax1, costs, "V3 Design (Gyro-Bohm)", total, P_net)
+    draw_table(ax2, costs, "Cost Breakdown", P_net, total)
+
+    fig.suptitle("V3 Cost Breakdown", fontsize=14)
     plt.tight_layout()
     if save:
         fig.savefig("fig_cost.png")
@@ -380,23 +376,22 @@ def fig_tbr_sensitivity(save=True):
 
 def fig_plasma_cross_section(save=True):
     fig, ax = plt.subplots(figsize=(7, 7))
-    R0, a, kappa, delta_u, delta_l = 12.08, 0.96, 2.71, 0.30, 0.30
+    R0, a, kappa, delta_u, delta_l = D["R0"], D["a"], D["elongation"], D["triangularity_upper"], D["triangularity_lower"]
     theta = np.linspace(0, 2 * np.pi, 200)
-    R = R0 + a * np.cos(theta + delta_u * np.sin(theta))
+    delta_arr = np.where(theta < np.pi, delta_u, delta_l)
+    R = R0 + a * np.cos(theta + delta_arr * np.sin(theta))
     Z = kappa * a * np.sin(theta)
-    R_div = 12.08 - 0.96
-    Z_div = -kappa * a * 1.3
 
     ax.fill(R, Z, color="#3498db", alpha=0.3, edgecolor="#2e86c1", lw=2, label="Plasma")
     ax.plot(R0, 0, "r+", markersize=12, markeredgewidth=2)
-    ax.annotate("Magnetic axis", xy=(R0, 0), xytext=(12.8, 0.5),
+    ax.annotate("Magnetic axis", xy=(R0, 0), xytext=(R0 + 0.8, 0.5),
                 fontsize=9, arrowprops=dict(arrowstyle="->", color="red"))
 
     circle = plt.Circle((R0, 0), a, fill=False, color="gray", ls="--", lw=1, alpha=0.4)
     ax.add_patch(circle)
 
     ax.plot([R0 - a, R0 + a], [-kappa * a, -kappa * a], "k-", lw=1.5)
-    ax.annotate("$2\\kappa a$", xy=(R0, -kappa * a), xytext=(12.5, -3.0),
+    ax.annotate("$2\\kappa a$", xy=(R0, -kappa * a), xytext=(R0 + 1.5, -4.0),
                 fontsize=9, arrowprops=dict(arrowstyle="<->"))
 
     ax.annotate("$2a$", xy=(R0 - a, 4.0), xytext=(R0, 4.0), fontsize=9,
@@ -420,7 +415,7 @@ def fig_plasma_cross_section(save=True):
         f"$\\kappa = {kappa:.2f}$\n"
         f"$\\delta = {delta_u:.2f}$\n"
         f"$A = {R0 / a:.1f}$\n"
-        f"$I_p = 10.6$ MA"
+        f"$I_p = {D['Ip']/1000:.1f}$ MA"
     )
     ax.text(0.02, 0.98, info_text, transform=ax.transAxes, fontsize=9,
             verticalalignment="top", bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.8))
@@ -511,9 +506,10 @@ def fig_eccd_system(save=True):
     for bar, v in zip(bars, values):
         ax.text(bar.get_width() + 0.3, bar.get_y() + bar.get_height() / 2,
                 f"{v:.1f} MW", va="center", fontsize=9)
+    Pnet = eng.get("P_net_electric_MW", 1000)
     total = sum(values)
     ax.text(total * 0.5, -0.6, f"Total wall-plug: {total:.0f} MW  "
-             f"({total/1762*100:.1f}% of P$_{{\\text{{net}}}}$)",
+             f"({total/Pnet*100:.1f}% of P$_{{\\text{{net}}}}$)",
              ha="center", fontsize=9, transform=ax.get_xaxis_transform())
     ax.grid(axis="x", alpha=0.2)
 
@@ -528,12 +524,12 @@ def fig_eccd_system(save=True):
     info_lines = [
         f"Frequency:  {freq:.0f} GHz",
         f"TRL:  {trl}  ({status})",
-        f"Gyrotrons:  {n_gyro} × 0.5 MW",
+        f"Gyrotrons:  {n_gyro} × 1.5 MW",
         f"Ports:  {n_ports}",
         f"Cost:  {eng['ECCD_cost_MS']:.0f} M USD",
         "",
         f"Recirculated:  {eng['ECCD_recirc_MW']:.0f} MW",
-        f"Net reduction:  {eng['ECCD_recirc_MW']/1762*100:.1f}% of P$_{{\\text{{net}}}}$",
+        f"Net reduction:  {eng['ECCD_recirc_MW']/Pnet*100:.1f}% of P$_{{\\text{{net}}}}$",
     ]
     y0 = 0.85
     for i, line in enumerate(info_lines):
@@ -545,7 +541,7 @@ def fig_eccd_system(save=True):
     ax = axes[2]
     reactors = ["ITER", "SPARC", "This design"]
     P_ec = [20, 12, eng["P_ECCD_MW"]]
-    P_net_ref = [500, 50, 1762]
+    P_net_ref = [500, 50, Pnet]
     rect_recirc = [40, 24, eng["ECCD_recirc_MW"]]
     x = np.arange(len(reactors))
     w = 0.30
@@ -575,38 +571,34 @@ def fig_tokamak_layout(save=True):
     Full tokamak poloidal cross-section with all major components,
     coil systems, and structural regions dimensioned.
     """
-    R0, a, kappa = 12.08, 0.96, 2.71
-    delta_u, delta_l = 0.30, 0.30
+    R0, a, kappa = D["R0"], D["a"], D["elongation"]
+    delta_u, delta_l = D["triangularity_upper"], D["triangularity_lower"]
 
-    # Derived geometry from physics_engine
-    R_TF_min = 9.32       # m, TF inner leg (plasma-facing edge)
-    w_TF_inner = 2.5      # m, TF inner leg radial width (winding + case)
-    h_TF = 20.0           # m, TF coil total height (±10 m)
-    R_TF_outer = 14.8     # m, TF outer leg approx position
+    # Derived geometry from v3_model.py
+    R_TF_inner_min = 4.0
+    w_TF_inner = 1.8       # m, TF inner leg radial width
+    h_TF = 12.0            # m, TF coil total height
+    R_TF_outer = 10.0      # m, TF outer leg approx position
 
     # CS geometry
-    R_CS_inner = 0.75
-    R_CS_outer = 3.10
-    h_CS = 15.0
+    R_CS_inner = 0.6
+    R_CS_outer = 2.0
+    h_CS = 10.0
 
-    # Inboard build
     r_blk = 0.8
     r_shd = 0.5
     r_vv = 0.3
-    r_gap = 0.1
-    inboard_build = r_blk + r_shd + r_vv + r_gap
 
-    R_plasma_inner = R0 - a  # 11.12 m
-    R_plasma_outer = R0 + a  # 13.04 m
+    R_plasma_inner = R0 - a
+    R_plasma_outer = R0 + a
 
-    # PF coil positions (quick_eval data)
     pf_coords = {
-        "PF1": (4.0, 9.5), "PF2": (9.5, 8.0), "PF3": (15.5, 4.5),
-        "PF4": (15.5, -4.5), "PF5": (9.5, -8.0), "PF6": (4.0, -9.5),
-        "D1": (11.5, -3.0), "D2": (13.5, -3.2),
+        "PF1": (2.5, 6.0), "PF2": (6.0, 5.0), "PF3": (9.5, 3.0),
+        "PF4": (9.5, -3.0), "PF5": (6.0, -5.0), "PF6": (2.5, -6.0),
+        "D1": (7.0, -3.5), "D2": (8.0, -3.5),
     }
 
-    fig, ax = plt.subplots(figsize=(10, 12))
+    fig, ax = plt.subplots(figsize=(10, 10))
 
     # ── Plasma boundary D-shape ──────────────────────────────────────────
     theta = np.linspace(0, 2 * np.pi, 300)
@@ -618,8 +610,8 @@ def fig_tokamak_layout(save=True):
 
     # ── Inboard structural column (TF inner leg + case + support) ────────
     z_col = np.linspace(-h_TF / 2, h_TF / 2, 50)
-    R_col_left = np.full_like(z_col, R_TF_min)
-    R_col_right = np.full_like(z_col, R_TF_min + w_TF_inner)
+    R_col_left = np.full_like(z_col, R_TF_inner_min)
+    R_col_right = np.full_like(z_col, R_TF_inner_min + w_TF_inner + 0.8)
     ax.fill_betweenx(z_col, R_col_left, R_col_right,
                      color="#d5d8dc", edgecolor="#808b96", lw=1.5,
                      hatch="////", alpha=0.5, label="TF inner leg", zorder=3)
@@ -629,15 +621,15 @@ def fig_tokamak_layout(save=True):
     N_d = 150
     theta_d = np.linspace(np.pi / 2, -np.pi / 2, N_d)
     p_shape = 0.65  # D-shape parameter (<1 = more pointed)
-    R_outer_curve = (R_TF_min + w_TF_inner
-                     + (R_TF_outer - R_TF_min - w_TF_inner)
+    R_outer_curve = (R_TF_inner_min + w_TF_inner
+                     + (R_TF_outer - R_TF_inner_min - w_TF_inner)
                      * np.abs(np.cos(theta_d)) ** p_shape)
     Z_outer_curve = (h_TF / 2) * np.sin(theta_d)
 
     # Inner curve (parallel to outer, offset by w_TF)
     w_TF_thickness = 1.2  # approximate TF coil thickness in R direction
-    R_inner_curve = (R_TF_min + w_TF_inner - w_TF_thickness
-                     + (R_TF_outer - w_TF_thickness - R_TF_min - w_TF_inner + w_TF_thickness)
+    R_inner_curve = (R_TF_inner_min + w_TF_inner - w_TF_thickness
+                     + (R_TF_outer - w_TF_thickness - R_TF_inner_min - w_TF_inner + w_TF_thickness)
                      * np.abs(np.cos(theta_d)) ** p_shape)
 
     # Combine to make TF coil D-outline
@@ -668,7 +660,7 @@ def fig_tokamak_layout(save=True):
     ax.plot([R_CS_mid], [0], marker="s", color="#d35400", markersize=10)
 
     # ── Vacuum vessel + blanket + shield (inboard) ──────────────────────
-    # Inboard: from R_plasma_inner inward
+    r_gap = 0.1
     R_VV_inner_in = R_plasma_inner - r_blk - r_shd - r_vv - r_gap
     R_shield_in = R_plasma_inner - r_blk - r_shd
     R_blanket_in = R_plasma_inner - r_blk
@@ -760,33 +752,29 @@ def fig_tokamak_layout(save=True):
             ha="center", va="center", color="#5d6d7e", rotation=90)
 
     # ── Dimension annotations ────────────────────────────────────────────
-    # R0 arrow
-    ax.annotate("", xy=(0, -11.5), xytext=(R0, -11.5),
+    ax.annotate("", xy=(0, -10.5), xytext=(R0, -10.5),
                 arrowprops=dict(arrowstyle="<->", color="k", lw=1.5))
-    ax.text(R0 / 2, -12.0, "$R_0 = 12.08$ m", fontsize=10, ha="center",
+    ax.text(R0 / 2, -11.0, f"$R_0 = {R0:.1f}$ m", fontsize=10, ha="center",
             va="center", bbox=dict(fc="white", ec="none", alpha=0.7))
 
-    # a arrow
-    ax.annotate("", xy=(R0, -12.5), xytext=(R0 + a, -12.5),
+    ax.annotate("", xy=(R0, -11.5), xytext=(R0 + a, -11.5),
                 arrowprops=dict(arrowstyle="<->", color="k", lw=1.5))
-    ax.text(R0 + a / 2, -13.0, "$a = 0.96$ m", fontsize=9, ha="center")
+    ax.text(R0 + a / 2, -12.0, f"$a = {a:.1f}$ m", fontsize=9, ha="center")
 
-    # κa arrow
-    ax.annotate("", xy=(17.0, 0), xytext=(17.0, kappa * a),
+    ax.annotate("", xy=(R0 + a + 1.5, 0), xytext=(R0 + a + 1.5, kappa * a),
                 arrowprops=dict(arrowstyle="<->", color="k", lw=1.5))
-    ax.text(17.5, kappa * a / 2, "$\\kappa a = 2.60$ m", fontsize=9,
+    ax.text(R0 + a + 2.0, kappa * a / 2, f"$\\kappa a = {kappa*a:.1f}$ m", fontsize=9,
             ha="center", va="center")
 
-    # Inboard build
-    ax.annotate("", xy=(R_plasma_inner, -11.0), xytext=(R_TF_min + w_TF_inner, -11.0),
+    inboard_build = R_plasma_inner - R_TF_inner_min
+    ax.annotate("", xy=(R_plasma_inner, -10.0), xytext=(R_TF_inner_min + w_TF_inner, -10.0),
                 arrowprops=dict(arrowstyle="<->", color="#5d6d7e", lw=1.5))
-    ax.text(R0 - a - 0.8, -10.5, "Inboard\nbuild 1.8 m", fontsize=8,
+    ax.text(R0 - a - 0.5, -9.5, f"Inboard\nbuild {inboard_build:.1f} m", fontsize=8,
             ha="center", va="center", color="#5d6d7e")
 
-    # CS dimension
-    ax.annotate("", xy=(R_CS_inner, 9.0), xytext=(R_CS_outer, 9.0),
+    ax.annotate("", xy=(R_CS_inner, 8.0), xytext=(R_CS_outer, 8.0),
                 arrowprops=dict(arrowstyle="<->", color="#d35400", lw=1.5))
-    ax.text((R_CS_inner + R_CS_outer) / 2, 9.5, "$R_{CS}=0.75\\!-\\!3.10$ m",
+    ax.text((R_CS_inner + R_CS_outer) / 2, 8.5, f"$R_{{CS}}={{{R_CS_inner:.1f}}}\\!-\\!{{{R_CS_outer:.1f}}}$ m",
             fontsize=8, ha="center", color="#d35400")
 
     # ── Legend ───────────────────────────────────────────────────────────
@@ -806,8 +794,8 @@ def fig_tokamak_layout(save=True):
               ncol=2, framealpha=0.9)
 
     # ── Axis settings ────────────────────────────────────────────────────
-    ax.set_xlim(-0.5, 18.5)
-    ax.set_ylim(-13.5, 13.5)
+    ax.set_xlim(-0.5, 12.0)
+    ax.set_ylim(-11.0, 11.0)
     ax.set_aspect("equal")
     ax.set_xlabel("$R$ (m)", fontsize=12)
     ax.set_ylabel("$Z$ (m)", fontsize=12)
@@ -815,9 +803,8 @@ def fig_tokamak_layout(save=True):
     ax.grid(alpha=0.15)
     ax.tick_params(labelsize=9)
 
-    # Symmetry line
     ax.axvline(0, color="gray", ls="--", lw=1, alpha=0.4)
-    ax.text(0.2, 13.0, "Axis of symmetry", fontsize=8, color="gray", rotation=90)
+    ax.text(0.2, 10.5, "Axis of symmetry", fontsize=8, color="gray", rotation=90)
 
     plt.tight_layout()
     if save:
@@ -888,7 +875,8 @@ def fig_power_flow(save=True):
 
     # ── Right: Recirc breakdown ──────────────────────────────────────────
     recirc_labels = {
-        "He_circulators": "He circulators",
+        "blanket_pump": "Blanket pump",
+        "sCO2_compression": "sCO$_2$ compress.",
         "cryoplant": "Cryoplant",
         "cooling_pumps": "Cooling pumps",
         "vacuum": "Vacuum pumps",
